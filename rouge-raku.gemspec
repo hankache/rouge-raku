@@ -13,11 +13,12 @@ Gem::Specification.new do |s|
     to Rouge, as a plugin gem.
   DESC
   s.homepage = "https://github.com/hankache/rouge-raku"
-  s.files = Dir['Gemfile', 'LICENSE', 'README.md', 'rouge-raku.gemspec', 'lib/**/*.rb', 'lib/rouge/demos/*']
+  s.files = Dir['CHANGELOG.md', 'Gemfile', 'LICENSE', 'README.md', 'rouge-raku.gemspec', 'lib/**/*.rb', 'lib/rouge/demos/*']
   s.licenses = ['MIT']
   s.required_ruby_version = '>= 3.0'
   s.metadata = {
     "bug_tracker_uri"   => "https://github.com/hankache/rouge-raku/issues",
+    "changelog_uri"     => "https://github.com/hankache/rouge-raku/blob/main/CHANGELOG.md",
     "source_code_uri"   => "https://github.com/hankache/rouge-raku",
     "rubygems_mfa_required" => "true"
   }
