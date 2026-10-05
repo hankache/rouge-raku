@@ -1,6 +1,6 @@
 # rouge-raku
 
-A [Raku](https://raku.org) lexer for the [Rouge](https://github.com/rouge-ruby/rouge)
+A [Raku](https://raku.org) lexer for the [Rouge](https://rouge.jneen.ca/)
 syntax highlighter, packaged as a plugin gem. Rouge does not highlight Raku
 on its own; with this gem loaded, it does.
 
