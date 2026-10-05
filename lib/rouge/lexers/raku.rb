@@ -241,8 +241,7 @@ module Rouge
         π τ ∞ 𝑒 pi tau Inf NaN e i
       ).freeze
 
-      # Symbolic operators, including the Unicode synonyms. They are sorted
-      # longest-first when the regex is built so that e.g. "==>" wins over "==".
+      # symbolic operators, including the Unicode synonyms
       SYMBOL_OPERATORS = %w(
         ... … <=> ==>> <<== ==> <== === =:= =~= !~~ ~~ ::= := ^..^ ..^
         ^.. .. ** ++ -- && || // ^^ ?? !! == != <= >= => %% +& +| +^
@@ -274,7 +273,8 @@ module Rouge
 
       # --- building blocks for the rules below
 
-      # Ruby's \w is ASCII-only, so word characters are spelled out.
+      # Ruby's \w, \d and \s are ASCII-only. Raku is not, so the rules use
+      # \p{Nd} and \p{Space}, and word characters are spelled out.
       w = '\p{L}\p{N}_'
       # Superscript digits and signs are exponents ("$x²"), so they must
       # not be part of an identifier.
@@ -295,7 +295,8 @@ module Rouge
       ident = "#{nondigit}#{word}*(?:['\\-]#{nondigit}#{word}*)*"
       qualified_ident = "#{ident}(?:::#{ident})*"
       # the operator part of a routine name: infix:<+>, circumfix:«[ ]»
-      op_name_suffix = '(?::(?:sym)?(?:<[^>\n]+>|«[^»\n]+»|\[[^\]\n]+\]))'
+      op_name_suffix = '(?::(?:sym)?(?:<[^>\n]+>|«[^»\n]+»|' \
+        '\[(?:"[^"\n]*"|\'[^\'\n]*\'|[^\]\n])+\]))'
       routine_name = "[!^]?#{qualified_ident}#{op_name_suffix}?"
       op_categories = '(?:infix|prefix|postfix|circumfix|postcircumfix|term|trait_mod)'
       type_name = "[A-Z]#{word}*(?:['\\-]#{nondigit}#{word}*)*(?:::#{ident})*"
@@ -314,31 +315,59 @@ module Rouge
         and or not so return grep map first split comb match subst
         contains ff fff xor andthen orelse
       )
-      regex_position = "(?:(?<=[=(,{\\[;:!~|&?])|(?<==>)|" \
+      regex_position = "(?=\\p{Space}*\\/)(?:(?<=[=(,{\\[;:!~|&?])|(?<==>)|" \
         "#{regex_words.map { |x| "(?<=\\b#{x} )" }.join('|')})"
+      open_brackets = Regexp.escape(BRACKETS.keys.join)
+
+      # Where q, m, s and the like can start a quote: not after a dot, where
+      # they are method names ("$file.s / 1024").
+      quote_start = "(?<![#{w}'\\-.])"
+      # the adverbs of a quote: q:to, qq:!c, m:i:g
+      adverbs = "(?:\\p{Space}*:!?[#{w}]+)+"
+      # Between a quote word and its delimiter, whitespace can only come
+      # before a bracket or a slash: in "q ~~ $x" and "m ?? 1 !! 2", q and
+      # m are names.
+      before_delimiter = "(?:\\p{Space}*(?=[#{open_brackets}\\/])|)"
+      # where a "<" starts a word list rather than being a comparison
+      term_position = "(?=\\p{Space}*<)(?:(?<=[=(,\\[])|(?<=\\bfor ))"
       # "token", "rule" and "regex" are ordinary words in "$x.rule",
       # "rule => 1" or "/regex/"
       not_a_regex_declarator = "(?<![#{w}'.:$@%&\\/<\\-])"
 
-      alternatives = lambda do |words|
-        words.sort_by { |x| -x.length }.map { |x| Regexp.escape(x) }.join('|')
+      # A regex matching the longest of +words+. Common prefixes are shared,
+      # so that it does not slow down as the list grows.
+      any_of = lambda do |words|
+        tree = {}
+        words.each do |x|
+          x.each_char.inject(tree) { |node, char| node[char] ||= {} }[:end] = true
+        end
+
+        build = lambda do |node|
+          branches = node.reject { |char, _| char == :end }.map do |char, rest|
+            Regexp.escape(char) + build.(rest)
+          end
+          next '' if branches.empty?
+          next branches.first if branches.length == 1 && !node[:end]
+
+          "(?:#{branches.join('|')})#{'?' if node[:end]}"
+        end
+        build.(tree)
       end
 
       word_match = lambda do |words, suffix = ''|
-        "(?<!#{ident_char})(#{words.map { |x| Regexp.escape(x) }.join('|')})" \
+        "(?<!#{ident_char})(#{any_of.(words)})" \
           "#{suffix}(?!#{ident_end})"
       end
 
-      not_a_builtin_type = "(?!(?:#{alternatives.(BUILTIN_CLASSES)}|True|False|Nil)" \
+      not_a_builtin_type = "(?!(?:#{any_of.(BUILTIN_CLASSES)}|True|False|Nil)" \
         "#{smiley}?(?!#{ident_end}))"
       # After a dot every builtin routine is a builtin, and so is the name
       # of a type: "$x.Int" calls the coercion method, it does not name
       # the type.
       method_builtins = (BUILTINS | METHODS | BUILTIN_CLASSES).sort
-      open_brackets = Regexp.escape(BRACKETS.keys.join)
 
       OPEN_BRACKET = /[#{open_brackets}]/
-      HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\s*((?::[#{w}]+\s*)+)([^#{w}\s:])/
+      HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\p{Space}*((?::[#{w}]+\p{Space}*)+)([^#{w}\p{Space}:])/
 
       start do
         @brace_levels = []
@@ -437,10 +466,10 @@ module Rouge
         if BRACKETS[opener[0]].nil?
           # s/a/b/ : the replacement follows directly, with the same delimiter
           lex_regex_part(stream, opener, replacement, match_variable: true)
-        elsif stream.check(/\s*#{OPEN_BRACKET}/)
+        elsif stream.check(/\p{Space}*#{OPEN_BRACKET}/)
           # s{a}{b} : another bracketed group, possibly after whitespace.
           # Otherwise it is s{a} = b, an ordinary assignment.
-          token Text::Whitespace, stream.scan(/\s*/)
+          token Text::Whitespace, stream.scan(/\p{Space}*/)
           opener = stream.scan(/(.)\1*/m)
           token Str::Regex, opener
           lex_regex_part(stream, opener, replacement)
@@ -511,7 +540,35 @@ module Rouge
       # :embedded state counts braces to know where that code ends, so if
       # you process one of them, make sure you also process the other!
       state :common do
-        # --- comments and Pod
+        # --- Pod and regexes. These can start with whitespace, which the
+        # rules after them skip.
+        # Pod: everything after =finish, a delimited block (=begin pod ...
+        # =end pod), or a paragraph or abbreviated block, which ends at the
+        # first blank line
+        rule %r/^=finish\b.*|^(\p{Space}*)=begin\p{Space}+([#{w}]+)\b.*?^\1=end\p{Space}+\2|^\p{Space}*=for.*?\n\p{Space}*?\n|^=.*?\n\p{Space}*?\n/m do |m|
+          sublex m[0], :pod_body
+        end
+        # a regex without m or rx: $s ~~ /x/, .subst(/x/, ''), say /x/
+        rule %r/#{regex_position}(\p{Space}*)(\/)(?!\/)(?=(?:\\[\s\S]|[^\/\\\n])*\/)/ do |m|
+          opener = m[2]
+          groups Text::Whitespace, Str::Regex
+          lex_regex_part(m, opener, :regex_body)
+        end
+
+        # a word list where a term is expected, which unlike the general
+        # rule for <a b c> further down can start with a space, span lines
+        # and hold any character: my @a = < a " b >;
+        rule %r/#{term_position}(\p{Space}*)(<(?!<|=?\])\p{Space}[^<>]*>)/ do
+          groups Text::Whitespace, Str
+        end
+
+        # --- whitespace and punctuation. No rule below starts with either,
+        # and they are the most common tokens, so they are not made to
+        # wait for all the other rules to fail first.
+        rule %r/\p{Space}+/, Text::Whitespace
+        rule %r/[;,()\]]/, Punctuation
+
+        # --- comments
         rule %r/#[`|=](([#{open_brackets}])\2*)/ do |m|
           opening = m[0]
           token Comment::Multiline, opening + scan_delimited(m, m[1]).join
@@ -519,46 +576,71 @@ module Rouge
         rule %r/#[|=].*/, Comment::Special
         rule %r/#.*/, Comment::Single
 
-        # everything after =finish
-        rule %r/^=finish\b.*/m do |m|
-          sublex m[0], :pod_body
-        end
-        # a delimited block: =begin pod ... =end pod
-        rule %r/^(\s*)=begin\s+([#{w}]+)\b.*?^\1=end\s+\2/m do |m|
-          sublex m[0], :pod_body
-        end
-        # paragraph and abbreviated blocks end at the first blank line
-        rule %r/^(\s*)=for.*?\n\s*?\n/m do |m|
-          sublex m[0], :pod_body
-        end
-        rule %r/^=.*?\n\s*?\n/m do |m|
-          sublex m[0], :pod_body
-        end
+        # --- variables. Nothing else starts with a sigil either.
+        # attributes ($!x, $.x) and compile-time / pod variables ($?FILE, $=pod)
+        rule %r/[$@%&][.!]#{qualified_ident}#{angle_subscripts}/, Name::Variable::Instance
+        rule %r/[$@%&][?=]#{ident}#{angle_subscripts}/, Name::Variable::Magic
+        rule %r/::\?[#{w}]+/, Name::Variable::Global
+        rule %r/[$@%&]\*#{qualified_ident}#{angle_subscripts}/, Name::Variable::Global
+        rule %r/\$[!\/¢]#{angle_subscripts}/, Name::Variable::Global
+        rule %r/&#{op_categories}#{op_name_suffix}/, Name::Variable
+        rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}|\p{Nd}+)#{angle_subscripts}/, Name::Variable
+        rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
+        # anonymous variables: "state $ = 0", "$++"
+        rule %r/[$@](?=[\p{Space}=;,)\]]|\+\+|--)/, Name::Variable
+        rule %r/%(?=[,)])/, Name::Variable
+        # contextualizers: $(...), @(...), @$x, $@a
+        rule %r/[$@](?=[(\[{])/, Operator
+        rule %r/[$@%&](?=[$@%&][#{w}.!*?^])/, Operator
+        # sigilless variables (\x), capture literals \(1, 2) and unspace
+        rule %r/\\#{ident}/, Name::Variable
+        rule %r/\\(?=[\p{Space}(])/, Operator
+        # type captures: ::T
+        rule %r/::#{ident}/, Name::Class
+
+        # --- numbers. Nothing else starts with a digit.
+        rule %r/0x[0-9A-Fa-f]+(?:_[0-9A-Fa-f]+)*/, Num::Hex
+        rule %r/0o[0-7]+(?:_[0-7]+)*/, Num::Oct
+        rule %r/0b[01]+(?:_[01]+)*/, Num::Bin
+        rule %r/0d\p{Nd}+(?:_\p{Nd}+)*/, Num::Integer
+        # radix literals: :16<FF>
+        rule %r/:\p{Nd}+<[0-9a-z_.]+>/i, Num
+        # imaginary numbers
+        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*(?:\.\p{Nd}+(?:_\p{Nd}+)*)?|\.\p{Nd}+(?:_\p{Nd}+)*)(?:e[+-]?\p{Nd}+)?i(?![#{w}'\-])/i, Num::Float
+        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*)?\.\p{Nd}+(?:_\p{Nd}+)*(?:e[+-]?\p{Nd}+)?/i, Num::Float
+        rule %r/\p{Nd}+(?:_\p{Nd}+)*e[+-]?\p{Nd}+/i, Num::Float
+        rule %r/\p{Nd}+(?:_\p{Nd}+)*/, Num::Integer
+        # rational and complex literals: <1/3>, <1+2i>
+        rule %r/<[-+]?\p{Nd}+\/\p{Nd}+>/, Num
+        rule %r/<[-+]?[\p{Nd}.]+[-+][\p{Nd}.]+i>/, Num
 
         # --- regex declarations, only when a name or a block follows
-        rule %r/#{not_a_regex_declarator}(regex|token|rule)(\s+)(#{ident}:sym)/ do
+        rule %r/#{not_a_regex_declarator}(regex|token|rule)(\p{Space}+)(#{ident}:sym)/ do
           groups Keyword::Declaration, Text::Whitespace, Name::Function
           push :token_sym_brackets
         end
-        rule %r/#{not_a_regex_declarator}(regex|token|rule)(?=\s+[\p{L}\p{No}\p{Nl}_]|\s*\{)(?!\s+[#{w}]+\s*=>)(\s*)(#{qualified_ident})?/ do
+        rule %r/#{not_a_regex_declarator}(regex|token|rule)(?=\p{Space}+[\p{L}\p{No}\p{Nl}_]|\p{Space}*\{)(?!\p{Space}+[#{w}]+\p{Space}*=>)(\p{Space}*)(#{qualified_ident})?/ do
           groups Keyword::Declaration, Text::Whitespace, Name::Function
           push :pre_token
         end
 
         # deal with a special case in the Raku grammar (role q { ... })
-        rule %r/(role)(\s+)(q)(\s*)/ do
+        rule %r/(role)(\p{Space}+)(q)(\p{Space}*)/ do
           groups Keyword::Declaration, Text::Whitespace, Name, Text::Whitespace
         end
 
-        # --- quote-like constructs: q/raw/, qq{interpolating}, Q[literal]
+        # --- quote-like constructs: q/raw/, qq{interpolating}, Q[literal].
+        # A bracket can be repeated to make a longer delimiter (q<< >>);
+        # other characters can not, so qq|| is an empty string.
         # and heredocs (q:to/END/). Before the keyword and builtin rules,
         # which would otherwise take q for a word.
-        rule %r/#{nw}(qq|q|Q)[a-zA-Z]?\s*(:[#{w}\s:]+)?\s*(([^0-9a-zA-Z:\s=,;)])\4*)/ do |m|
+        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|[^0-9a-zA-Z:\p{Space}=,;)])/ do |m|
           opening = m[0]
           adverbs = m[2].to_s
           # qq strings (and the :qq / :c adverbs) interpolate
           interpolate = m[1] == 'qq' || adverbs.match?(/:(?:qq|c)\b/)
-          body, closing = scan_delimited(m, m[3], escapes: true)
+          # nothing is special in Q, not even a backslash: Q/\/
+          body, closing = scan_delimited(m, m[3], escapes: m[1] != 'Q')
 
           if adverbs.match?(/:to\b/)
             token Str, opening + body + closing
@@ -573,67 +655,62 @@ module Rouge
         end
 
         # --- regexes: m/x/, rx{x}, and with adverbs m:i/x/
-        rule %r/#{nw}(?:m|ms|rx)\s*(?::[#{w}\s:]+)?\s*(([^#{w}:\s=,;)])\2*)/ do |m|
+        rule %r/#{quote_start}(?:m|ms|rx)(?:#{adverbs}\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\2*|[^#{w}:\p{Space}=,;)])/ do |m|
           opener = m[1]
           token Str::Regex
           lex_regex_part(m, opener, :regex_body)
         end
         # substitution and transliteration: s/a/b/, S{a}{b}, s:2nd/a/b/, tr/a-z/A-Z/
-        rule %r/#{nw}(ss|s|SS|S|tr|TR)(?=\s*:!?[#{w}])\s*(?::!?[#{w}\-]+(?:\([^)\n]*\))?\s*)+(([^#{w}:\s$@%&=,;)])\3*)/ do |m|
+        # (a pattern can not be empty, so S|| and S%% are operators)
+        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?=\p{Space}*:!?[#{w}])\p{Space}*(?::!?[#{w}\-]+(?:\([^)\n]*\))?\p{Space}*)+((#{OPEN_BRACKET})\3*|[^#{w}:\p{Space}$@%&=,;)])/ do |m|
           lex_substitution(m, m[0], m[1], m[2])
         end
-        rule %r/#{nw}(ss|s|SS|S|tr|TR)\s*(([\/{(\[|!^~@%])\3*)/ do |m|
+        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)#{before_delimiter}(([{(\[])\3*|([\/|!^~@%])(?!\4))/ do |m|
           lex_substitution(m, m[0], m[1], m[2])
         end
-        # a regex without m or rx: $s ~~ /x/, .subst(/x/, ''), say /x/
-        rule %r/#{regex_position}(\s*)(\/)(?!\/)(?=(?:\\[\s\S]|[^\/\\\n])*\/)/ do |m|
-          opener = m[2]
-          groups Text::Whitespace, Str::Regex
-          lex_regex_part(m, opener, :regex_body)
-        end
-
-        # --- curly and corner quotes: ‘raw’, “interpolating”, ｢no escapes｣
-        rule %r/[‘‚][^‘’]*[’‘]/, Str::Single
+        # --- curly and corner quotes: ‘raw’ (or ‚this‘, or ’this‘),
+        # “interpolating” (or „this“, or ”this“), ｢no escapes｣
+        rule %r/[‘‚’][^‘’]*[’‘]/, Str::Single
         rule %r/｢[^｣]*｣/, Str
-        rule %r/[“„]/, Str::Double, :dq_curly
+        rule %r/[“„”]/, Str::Double, :dq_curly
 
         # --- names whose meaning depends on where they are
         # method calls: .say, .Int, .^name, .?foo
         rule %r/#{after_dot}#{word_match.(method_builtins)}/, Name::Builtin
         rule %r/#{after_dot}#{ident}/, Name::Function
         # the key of a pair is a plain word, whatever it spells: name => 1
-        rule %r/(?<!#{ident_char})#{qualified_ident}(?=\s*=>)/, Name
+        rule %r/(?<!#{ident_char})#{qualified_ident}(?=\p{Space}*=>)/, Name
         # operators used by name: infix:<+>(1, 2)
         rule %r/(?<!#{ident_char})#{op_categories}#{op_name_suffix}/, Name::Function
         # traits: is rw, is copy, is export
-        rule %r/(?<!#{ident_char})(is)(\s+)#{word_match.(TRAITS)}/ do
+        rule %r/(?<!#{ident_char})(is)(\p{Space}+)#{word_match.(TRAITS)}/ do
           groups Keyword, Text::Whitespace, Keyword
         end
         # user-defined types: "is Foo", "of Foo", "--> Foo"
-        rule %r/(?<!#{ident_char})(is|does|of|returns|handles|trusts|hides)(\s+)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
+        rule %r/(?<!#{ident_char})(is|does|of|returns|handles|trusts|hides)(\p{Space}+)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
           groups Keyword, Text::Whitespace, Name::Class
         end
-        rule %r/(-->)(\s*)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
+        rule %r/(-->)(\p{Space}*)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
           groups Operator, Text::Whitespace, Name::Class
         end
         # version literals: use v6.d; use v6.e.PREVIEW; use v6.d+;
-        rule %r/#{nw}(use|need|require)(\s+)(v\d+(?:\.(?:\d+|\*|[A-Za-z]+))*\+?)(?![#{w}'\-])/ do
+        rule %r/#{nw}(use|need|require)(\p{Space}+)(v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[A-Za-z]+))*\+?)(?![#{w}'\-])/ do
           groups Keyword::Namespace, Text::Whitespace, Num
         end
         # module names: use Foo::Bar; need Baz; (pragmas such as 'use lib' too)
-        rule %r/#{nw}(use|need|require|import|no)(\s+)(#{qualified_ident})(?!#{ident_end})/ do
+        rule %r/#{nw}(use|need|require|import|no)(\p{Space}+)(#{qualified_ident})(?!#{ident_end})/ do
           groups Keyword::Namespace, Text::Whitespace, Name::Namespace
         end
 
         # --- declarations
-        rule %r/#{word_match.(%w(class role grammar module package knowhow enum subset))}(\s+)(#{qualified_ident})/ do
+        rule %r/#{word_match.(%w(class role grammar module package knowhow enum subset))}(\p{Space}+)(#{qualified_ident})/ do
           groups Keyword::Declaration, Text::Whitespace, Name::Class
         end
-        rule %r/#{word_match.(%w(sub method submethod macro))}(\s+)(#{routine_name})/ do
+        rule %r/#{word_match.(%w(sub method submethod macro))}(\p{Space}+)(#{routine_name})/ do
           groups Keyword::Declaration, Text::Whitespace, Name::Function
         end
         # "sub" is optional after multi, proto and only: multi foo(Int $x) { }
-        rule %r/#{word_match.(%w(multi proto only))}(\s+)(?!(?:sub|method|submethod|token|rule|regex|macro)(?!#{ident_end}))(#{routine_name})(?=\s*[({])/ do
+        rule %r/#{word_match.(%w(multi proto only))}(\p{Space}+)(?!(?:sub|method|submethod|token|rule|regex|macro)(?!#{ident_end}))(#{routine_name})(?=\p{Space}*[({])/ do
           groups Keyword::Declaration, Text::Whitespace, Name::Function
         end
 
@@ -646,7 +723,7 @@ module Rouge
         rule %r/#{word_match.(CONSTANTS)}/, Name::Constant
         rule %r/[∞∅]/, Name::Constant
         # version literals: v6.d, v1.2.3, v1.2+
-        rule %r/(?<!#{ident_char})v\d+(?:\.(?:\d+|\*|[a-z]))*\+?(?!#{ident_end})/, Num
+        rule %r/(?<!#{ident_char})v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]))*\+?(?!#{ident_end})/, Num
         # meta operators: Z+, X~, R-, Z=>, Rcmp, and x=, xx=
         rule %r/#{nw}[RXZ](?:\*\*|\/\/|&&|\|\||<=>|=>|==|!=|<=|>=|~~|[-+*\/%~,&|^?<>]|(?:cmp|eq|ne|lt|gt|le|ge|leg|eqv|min|max|div|mod|and|or|xor|x|xx)(?![#{w}'\-]))/, Operator
         rule %r/#{nw}(?:xx?|min|max)=(?![=~>])/, Operator
@@ -659,72 +736,38 @@ module Rouge
         rule %r/#{word_match.(BUILTINS)}/, Name::Builtin
         # a user-defined type: with a smiley, or constraining a variable
         rule %r/(?<!#{ident_char})#{type_name}#{smiley}/, Name::Class
-        rule %r/(?<!#{ident_char})#{type_name}(?=\s+[$@%&\\])/, Name::Class
+        rule %r/(?<!#{ident_char})#{type_name}(?=\p{Space}+[$@%&\\])/, Name::Class
         rule %r/(?<=[#{w}>])#{smiley}/, Keyword::Type
-
-        # --- variables
-        # attributes ($!x, $.x) and compile-time / pod variables ($?FILE, $=pod)
-        rule %r/[$@%&][.!]#{qualified_ident}#{angle_subscripts}/, Name::Variable::Instance
-        rule %r/[$@%&][?=]#{ident}#{angle_subscripts}/, Name::Variable::Magic
-        rule %r/::\?[#{w}]+/, Name::Variable::Global
-        rule %r/[$@%&]\*#{qualified_ident}#{angle_subscripts}/, Name::Variable::Global
-        rule %r/\$[!\/¢]#{angle_subscripts}/, Name::Variable::Global
-        rule %r/&#{op_categories}#{op_name_suffix}/, Name::Variable
-        rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}|\d+)#{angle_subscripts}/, Name::Variable
-        rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
-        # anonymous variables: "state $ = 0", "$++"
-        rule %r/[$@](?=[\s=;,)\]]|\+\+|--)/, Name::Variable
-        rule %r/%(?=[,)])/, Name::Variable
-        # contextualizers: $(...), @(...), @$x, $@a
-        rule %r/[$@](?=[(\[{])/, Operator
-        rule %r/[$@%&](?=[$@%&][#{w}.!*?^])/, Operator
-        # sigilless variables (\x), capture literals \(1, 2) and unspace
-        rule %r/\\#{ident}/, Name::Variable
-        rule %r/\\(?=[\s(])/, Operator
-        # type captures: ::T
-        rule %r/::#{ident}/, Name::Class
-
-        # --- numbers
-        rule %r/0x[0-9A-Fa-f]+(?:_[0-9A-Fa-f]+)*/, Num::Hex
-        rule %r/0o[0-7]+(?:_[0-7]+)*/, Num::Oct
-        rule %r/0b[01]+(?:_[01]+)*/, Num::Bin
-        rule %r/0d\d+(?:_\d+)*/, Num::Integer
-        # radix literals: :16<FF>
-        rule %r/:\d+<[0-9a-z_.]+>/i, Num
-        # imaginary numbers
-        rule %r/(?:\d+(?:_\d+)*(?:\.\d+(?:_\d+)*)?|\.\d+(?:_\d+)*)(?:e[+-]?\d+)?i(?![#{w}'\-])/i, Num::Float
-        rule %r/(?:\d+(?:_\d+)*)?\.\d+(?:_\d+)*(?:e[+-]?\d+)?/i, Num::Float
-        rule %r/\d+(?:_\d+)*e[+-]?\d+/i, Num::Float
-        rule %r/\d+(?:_\d+)*/, Num::Integer
-        # rational and complex literals: <1/3>, <1+2i>
-        rule %r/<[-+]?\d+\/\d+>/, Num
-        rule %r/<[-+]?[\d.]+[-+][\d.]+i>/, Num
 
         # --- operators that could be mistaken for quotes
         # hyper operators: »+«, >>+<<, +« (prefix), »++ and ».say (postfix)
         rule %r/(?:«|»|<<|>>)[-+*\/%~=!&|^?<>]+(?:«|»|<<|>>)/, Operator
         rule %r/[-+*\/%~!?|^]+«/, Operator
-        # ... and around a bracketed operator: «[op]«
-        rule %r/[«»]\[[^\]\n]+\][«»]|>>\[[^\]\n]+\]<</, Operator
+        # an ASCII prefix hyper, when its operand follows: -<< (3, 2, 1)
+        rule %r/[-+~!?|^]<<(?=\p{Space}*[$@%(\[])/, Operator
+        # ... and around a bracketed operator: «[op]«, <<[op]>>. With a
+        # variable inside it is a subscript: @rows>>[$i]>>.chars
+        rule %r/(?:«|»|<<|>>)\[[^\]\n$@%]+\](?:«|»|<<|>>)/, Operator
         rule %r/(?:»|>>)(?=\.[#{w}^?!(]|\+\+|--|[\[{<(])/, Operator
         # reduction operators: [+], [\*], [<=], [max], [Z+]
         rule %r/(?<![#{w}\])}>'\-])\[\\?(?:[RXZ]?[-+*\/%~=<>!&|^?,]+|[RXZ]?(?:min|max|gcd|lcm|and|or|xor|x|xx|cmp|eq|ne|lt|gt|le|ge|leg|eqv))\]/, Operator
         # quote-like words with interpolation: «a $b» and <<a $b>>. After
-        # an operator or a term these are hyper operators, not quotes.
-        rule %r/(?<![#{w}\])}>+\-*\/%~!?^|&.])«/, Str::Double, :ww_guillemets
-        rule %r/(?<![#{w}\])}>])<<(?!=)/, Str::Double, :ww_angles
-        rule %r/(?!<->)<[^\s=<>{};()](?:[^<>{};()]*[^\s<>{};()])?>/, Str
+        # an operator or a term these are hyper operators, not quotes,
+        # and so they are in [«] and [<<], which name an operator.
+        rule %r/(?<![#{w}\])}>+\-*\/%~!?^|&.])«(?!\])/, Str::Double, :ww_guillemets
+        rule %r/(?<![#{w}\])}>])<<(?![=\]])/, Str::Double, :ww_angles
+        rule %r/(?!<->)<[^\p{Space}=<>{};()](?:[^<>{};()]*[^\p{Space}<>{};()])?>/, Str
 
         # --- labels, pairs and operators
         # loop labels: OUTER: for ...
-        rule %r/#{nw}([A-Z][A-Z0-9_]*)(:)(?=\s*(?:for|while|until|loop|repeat|given|if|unless|do|\{|$))/ do
+        rule %r/#{nw}([A-Z][A-Z0-9_]*)(:)(?=\p{Space}*(?:for|while|until|loop|repeat|given|if|unless|do|\{|$))/ do
           groups Name::Label, Punctuation
         end
         # colon-pairs and adverbs: :name, :!flag, :name(...), :2nd
         rule %r/(:!?)(#{ident})/ do
           groups Punctuation, Name::Attribute
         end
-        rule %r/(:)(\d+)(#{ident})/ do
+        rule %r/(:)(\p{Nd}+)(#{ident})/ do
           groups Punctuation, Num::Integer, Name::Attribute
         end
         # superscript exponents: $x², A⁻¹
@@ -733,19 +776,18 @@ module Rouge
         rule %r/[-~+?!|^](?=&[\p{L}\p{No}\p{Nl}_])/, Operator
         # assignment meta operators: +=, //=, ||=, ...
         rule %r/(?:\*\*|\/\/|\|\||&&|%%|[-+*\/%~|&^?])=(?![=~>])/, Operator
-        rule %r/#{alternatives.(SYMBOL_OPERATORS)}/, Operator
+        rule %r/#{any_of.(SYMBOL_OPERATORS)}/, Operator
         rule %r/#{qualified_ident}/, Name
         rule %r/'(?:\\\\|\\[^\\]|[^'\\])*'/, Str::Single
         rule %r/"/, Str::Double, :dq_string
-        rule %r/[;,:()\[\]]/, Punctuation
+        rule %r/[:\[]/, Punctuation
       end
 
       state :root do
         mixin :common
         rule %r/[{}]/, Punctuation
-        rule %r/\s+/, Text::Whitespace
         # anything else that is not a letter: user-defined operators, ...
-        rule %r/[^#{w}\s]/, Operator
+        rule %r/[^#{w}\p{Space}]/, Operator
         rule %r/./m, Text
       end
 
@@ -758,8 +800,7 @@ module Rouge
           token Punctuation
           goto :token
         end
-        rule %r/\s+/, Text::Whitespace
-        rule %r/[^#{w}\s]/, Operator
+        rule %r/[^#{w}\p{Space}]/, Operator
         rule %r/./m, Text
       end
 
@@ -781,7 +822,7 @@ module Rouge
       # the body of a token, rule or regex, or of a m//, rx// or s///
       # pattern
       state :regex_body do
-        rule %r/\s+/, Text::Whitespace
+        rule %r/\p{Space}+/, Text::Whitespace
         rule %r/#.*/, Comment::Single
         # :my $x = ...; declarations are ordinary code
         rule %r/:(?=(?:my|our|state|constant|temp|let)\b)/, Punctuation
@@ -792,19 +833,19 @@ module Rouge
         rule %r/(:!?)([A-Za-z][#{w}\-]*)/ do
           groups Punctuation, Name::Attribute
         end
-        # character classes: <[a..z]>, <-[\d] + [_]>
-        rule %r/<(?:[-+!?.]\s*)?\[(?:\\.|[^\]\\])*\](?:\s*[-+]\s*(?:\[(?:\\.|[^\]\\])*\]|:?[#{w}\-]+))*\s*>/m, Str::Regex
+        # character classes: <[a..z]>, <-[\p{Nd}] + [_]>
+        rule %r/<(?:[-+!?.]\p{Space}*)?\[(?:\\.|[^\]\\])*\](?:\p{Space}*[-+]\p{Space}*(?:\[(?:\\.|[^\]\\])*\]|:?[#{w}\-]+))*\p{Space}*>/m, Str::Regex
         # unicode properties: <:Lu>, <+:L>, <:L + :N>, <:L - [a]>
-        rule %r/<[-+!?.]?\s*:[#{w}\-]+(?:\([^)\n]*\))?(?:\s*[-+]\s*(?::[#{w}\-]+|\[(?:\\.|[^\]\\])*\]))*\s*>/m, Name::Builtin
+        rule %r/<[-+!?.]?\p{Space}*:[#{w}\-]+(?:\([^)\n]*\))?(?:\p{Space}*[-+]\p{Space}*(?::[#{w}\-]+|\[(?:\\.|[^\]\\])*\]))*\p{Space}*>/m, Name::Builtin
         # named assertions: <foo>, <.foo>, <?before ...>, <name=rule>
-        rule %r/(<)([?!.+-]?)(\s*)(#{ident})(=)(#{ident})(>)/ do
+        rule %r/(<)([?!.+-]?)(\p{Space}*)(#{ident})(=)(#{ident})(>)/ do
           groups Punctuation, Punctuation, Text::Whitespace, Name::Variable,
                  Operator, Name::Function, Punctuation
         end
-        rule %r/(<)([?!.+-]?)(\s*)#{word_match.(REGEX_BUILTINS)}(>)?/ do
+        rule %r/(<)([?!.+-]?)(\p{Space}*)#{word_match.(REGEX_BUILTINS)}(>)?/ do
           groups Punctuation, Punctuation, Text::Whitespace, Name::Builtin, Punctuation
         end
-        rule %r/(<)([?!.+-]?)(\s*)(#{ident})(>)?/ do
+        rule %r/(<)([?!.+-]?)(\p{Space}*)(#{ident})(>)?/ do
           groups Punctuation, Punctuation, Text::Whitespace, Name::Function, Punctuation
         end
         # code blocks and variables
@@ -814,14 +855,14 @@ module Rouge
           push :embedded
         end
         rule %r/\$<[#{w}'\-]+>/, Name::Variable
-        rule %r/\$\d+/, Name::Variable
+        rule %r/\$\p{Nd}+/, Name::Variable
         rule %r/[$@][.^:?=!~*]?#{qualified_ident}#{angle_subscripts}/, Name::Variable
         # literals
         rule %r/'(?:\\.|[^'\\])*'/m, Str::Single
-        rule %r/[‘‚][^‘’\n]*[’‘]/, Str::Single
+        rule %r/[‘‚’][^‘’\n]*[’‘]/, Str::Single
         rule %r/｢[^｣]*｣/, Str
         rule %r/"/, Str::Double, :dq_string
-        rule %r/[“„]/, Str::Double, :dq_curly
+        rule %r/[“„”]/, Str::Double, :dq_curly
         rule %r/\\[xXcCoO]\[[^\]\n]*\]|\\x[0-9a-fA-F]+|\\./m, Str::Escape
         # anchors, quantifiers, alternation, separators
         rule %r/\^\^|\$\$|<<|>>|«|»|\^|\$/, Operator
@@ -850,20 +891,19 @@ module Rouge
             pop!
           end
         end
-        rule %r/\s+/, Text::Whitespace
-        rule %r/[^#{w}\s]/, Operator
+        rule %r/[^#{w}\p{Space}]/, Operator
         rule %r/./m, Text
       end
 
       # Pod documentation blocks
       state :pod_body do
-        rule %r/^(\s*)(=head\d*)(.*)/ do
+        rule %r/^(\p{Space}*)(=head\p{Nd}*)(.*)/ do
           groups Text::Whitespace, Comment::Preproc, Generic::Heading
         end
-        rule %r/^(\s*)(=(?:begin|end|for|finish))([ \t]*)([#{w}]*)/ do
+        rule %r/^(\p{Space}*)(=(?:begin|end|for|finish))([ \t]*)([#{w}]*)/ do
           groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
         end
-        rule %r/^(\s*)(=[A-Za-z][#{w}]*)/ do
+        rule %r/^(\p{Space}*)(=[A-Za-z][#{w}]*)/ do
           groups Text::Whitespace, Comment::Preproc
         end
         # formatting codes: B<bold>, I<italic>, C<code>, L<link>, ...
@@ -892,7 +932,7 @@ module Rouge
         rule %r/[$@%&]\((?:[^()\n]|\([^()\n]*\))*\)/, Str::Interpol
         # scalars always interpolate, optionally followed by subscripts
         # and method calls with parentheses
-        rule %r/\$(?:[*.!^?=~:]?#{qualified_ident}|[!\/&¢]|\d+|<[^>\n]+>)(?:#{subscript}|\.#{ident}\([^)\n]*\))*/, Str::Interpol
+        rule %r/\$(?:[*.!^?=~:]?#{qualified_ident}|[!\/&¢]|\p{Nd}+|<[^>\n]+>)(?:#{subscript}|\.#{ident}\([^)\n]*\))*/, Str::Interpol
         # arrays, hashes and functions only if they are subscripted/called
         rule %r/[@%][*.!^?=~:]?#{qualified_ident}#{subscript}(?:#{subscript})*/, Str::Interpol
         rule %r/&#{ident}\([^)\n]*\)/, Str::Interpol

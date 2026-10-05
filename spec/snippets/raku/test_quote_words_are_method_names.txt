@@ -1,0 +1,134 @@
+---input---
+say $f.IO.s / 1024, $x.m / 2, $y.q; $obj.m(1); ok $t.s ~~ /x/;
+ok S ~~ Stash, 'a class called S'; is (1 S|| 2), 1; my $r = $i S%% 1;
+$s ~~ s {a} = 'b'; $s ~~ s:g /a/b/; say S/a/b/ given $x; $s ~~ s|a|b|;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$f'          Name.Variable
+'.'           Operator
+'IO'          Name.Builtin
+'.'           Operator
+'s'           Name.Builtin
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'1024'        Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'$x'          Name.Variable
+'.'           Operator
+'m'           Name.Function
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'$y'          Name.Variable
+'.'           Operator
+'q'           Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'$obj'        Name.Variable
+'.'           Operator
+'m'           Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+');'          Punctuation
+' '           Text.Whitespace
+'ok'          Name.Builtin
+' '           Text.Whitespace
+'$t'          Name.Variable
+'.'           Operator
+'s'           Name.Builtin
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'/x/'         Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'ok'          Name.Builtin
+' '           Text.Whitespace
+'S'           Name
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'Stash'       Keyword.Type
+','           Punctuation
+' '           Text.Whitespace
+'\'a class called S\'' Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'('           Punctuation
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'S'           Name
+'||'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$r'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'$i'          Name.Variable
+' '           Text.Whitespace
+'S'           Name
+'%%'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'$s'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'s {a}'       Literal.String.Regex
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'\'b\''       Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'s:g /a/'     Literal.String.Regex
+'b'           Literal.String.Double
+'/'           Literal.String.Regex
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'S/a/'        Literal.String.Regex
+'b'           Literal.String.Double
+'/'           Literal.String.Regex
+' '           Text.Whitespace
+'given'       Keyword
+' '           Text.Whitespace
+'$x'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'s|a|'        Literal.String.Regex
+'b'           Literal.String.Double
+'|'           Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace
+

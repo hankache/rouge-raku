@@ -1,0 +1,31 @@
+---input---
+say ۵۵ + ١; say :۳<12>; say $٠;
+say 1;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'۵۵'          Literal.Number.Integer
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'١'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+':۳<12>'      Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$٠'          Name.Variable
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+

@@ -1,0 +1,130 @@
+---input---
+say "[{$p<a> // qq||}] $m"; say q|a|; say q<<a > b>>; say qq[[x]];
+say Q/\/ ~ 'x'; say q/a\/b/; BEGIN Q||.AST.EVAL;
+say q {x}; say q:w /a b/; say qq:!s:!c|a|; say rx:P5 !a!; $s ~~ m /x/;
+my $r = qh ~~ Setty ?? 1 !! 2; say (m ?? 2 !! 0);
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"['          Literal.String.Double
+'{'           Punctuation
+'$p<a>'       Name.Variable
+' '           Text.Whitespace
+'//'          Operator
+' '           Text.Whitespace
+'qq||'        Literal.String
+'}'           Punctuation
+'] '          Literal.String.Double
+'$m'          Literal.String.Interpol
+'"'           Literal.String.Double
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q|a|'        Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q<<a > b>>'  Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'qq[['        Literal.String
+'x'           Literal.String.Double
+']]'          Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'Q/\\/'       Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'\'x\''       Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q/a\\/b/'    Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'BEGIN'       Keyword
+' '           Text.Whitespace
+'Q||'         Literal.String
+'.'           Operator
+'AST'         Name.Builtin
+'.'           Operator
+'EVAL'        Name.Builtin
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q {x}'       Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:w /a b/'   Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'qq:!s:!c|'   Literal.String
+'a'           Literal.String.Double
+'|'           Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'rx:P5 !a!'   Literal.String.Regex
+';'           Punctuation
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'m /x/'       Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$r'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'qh'          Name
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'Setty'       Keyword.Type
+' '           Text.Whitespace
+'??'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'!!'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'('           Punctuation
+'m'           Name
+' '           Text.Whitespace
+'??'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+' '           Text.Whitespace
+'!!'          Operator
+' '           Text.Whitespace
+'0'           Literal.Number.Integer
+');'          Punctuation
+'\n'          Text.Whitespace
+

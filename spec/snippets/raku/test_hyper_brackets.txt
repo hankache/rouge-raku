@@ -1,0 +1,137 @@
+---input---
+cmp-ok 2, &[«], 1, 'x'; say [<<] @a; my @w = «a b»; my @v = [«a b»];
+say $a <<[&infix:<+>]<< $b, @a >>[+]>> @b, @a «[+]» @b; say "ok";
+say @rows>>[$_]>>.chars; @r = -<< (3, 2, 1); say "ok";
+sub prefix:["\x[2213]"] ($t) { "A$t" }; sub infix:['x'] { }
+
+---tokens---
+'cmp-ok'      Name.Builtin
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'&'           Operator
+'['           Punctuation
+'«'           Operator
+'],'          Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'\'x\''       Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'[<<]'        Operator
+' '           Text.Whitespace
+'@a'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@w'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'«a b»'       Literal.String.Double
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@v'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'['           Punctuation
+'«a b»'       Literal.String.Double
+'];'          Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$a'          Name.Variable
+' '           Text.Whitespace
+'<<[&infix:<+>]<<' Operator
+' '           Text.Whitespace
+'$b'          Name.Variable
+','           Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'>>[+]>>'     Operator
+' '           Text.Whitespace
+'@b'          Name.Variable
+','           Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'«[+]»'       Operator
+' '           Text.Whitespace
+'@b'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"ok"'        Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'@rows'       Name.Variable
+'>>'          Operator
+'['           Punctuation
+'$_'          Name.Variable
+']'           Punctuation
+'>>.'         Operator
+'chars'       Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'@r'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'-<<'         Operator
+' '           Text.Whitespace
+'('           Punctuation
+'3'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+');'          Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"ok"'        Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'prefix:["\\x[2213]"]' Name.Function
+' '           Text.Whitespace
+'('           Punctuation
+'$t'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'"A'          Literal.String.Double
+'$t'          Literal.String.Interpol
+'"'           Literal.String.Double
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'infix:[\'x\']' Name.Function
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+

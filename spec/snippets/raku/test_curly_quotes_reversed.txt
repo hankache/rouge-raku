@@ -1,0 +1,29 @@
+---input---
+is ‘"B"’, ”"Beth's"“, "ok ”“ fine";
+is ’"B"‘, ”"Beth's"”, „low“;
+
+---tokens---
+'is'          Keyword
+' '           Text.Whitespace
+'‘"B"’'       Literal.String.Single
+','           Punctuation
+' '           Text.Whitespace
+'”"Beth\'s"“' Literal.String.Double
+','           Punctuation
+' '           Text.Whitespace
+'"ok ”“ fine"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'is'          Keyword
+' '           Text.Whitespace
+'’"B"‘'       Literal.String.Single
+','           Punctuation
+' '           Text.Whitespace
+'”"Beth\'s"”' Literal.String.Double
+','           Punctuation
+' '           Text.Whitespace
+'„low“'       Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+

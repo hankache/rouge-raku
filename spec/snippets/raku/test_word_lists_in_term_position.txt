@@ -1,0 +1,108 @@
+---input---
+my @d = < ^ ! " § $ ; , | >; say "ok";
+for <
+  $" $; a
+> { .say }
+my @e = (< a b >, <c d>, [< e >]);
+say [<] 1, 2; say [<=] 1, 2; if $a < $b and $c > $d { }; my $f = $a < 3;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@d'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'< ^ ! " § $ ; , | >' Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"ok"'        Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'for'         Keyword
+' '           Text.Whitespace
+'<\n  $" $; a\n>' Literal.String
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'.'           Operator
+'say'         Name.Builtin
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@e'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'('           Punctuation
+'< a b >'     Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'<c d>'       Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'['           Punctuation
+'< e >'       Literal.String
+']);'         Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'[<]'         Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'[<=]'        Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'if'          Keyword
+' '           Text.Whitespace
+'$a'          Name.Variable
+' '           Text.Whitespace
+'<'           Operator
+' '           Text.Whitespace
+'$b'          Name.Variable
+' '           Text.Whitespace
+'and'         Operator.Word
+' '           Text.Whitespace
+'$c'          Name.Variable
+' '           Text.Whitespace
+'>'           Operator
+' '           Text.Whitespace
+'$d'          Name.Variable
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$f'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'$a'          Name.Variable
+' '           Text.Whitespace
+'<'           Operator
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+
