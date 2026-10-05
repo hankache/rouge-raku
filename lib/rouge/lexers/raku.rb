@@ -251,6 +251,12 @@ module Rouge
         ∘ ⚛ ≡ ≢ ⩶ ⩵ ∊ ∍
       ).freeze
 
+      # rules available in every grammar: <ws>, <alpha>, <before ...>, ...
+      REGEX_BUILTINS = %w(
+        alnum alpha after at before blank cntrl digit graph ident
+        lower print punct same space upper wb ws ww xdigit
+      ).freeze
+
       # Raku has a *lot* of possible bracketing characters. This list was
       # lifted from STD.pm6 (https://github.com/perl6/std).
       BRACKETS = %w(
@@ -301,6 +307,19 @@ module Rouge
       # in code can't swallow what follows it
       angle_subscripts = '(?:<<[^>\n]*>>|<[^>\n]*>|«[^»\n]*»)*'
 
+      # Where a "/" starts a regex rather than being a division: after an
+      # operator or an opening bracket, or after a word that takes a term.
+      regex_words = %w(
+        say put print when if elsif unless while until given with without
+        and or not so return grep map first split comb match subst
+        contains ff fff xor andthen orelse
+      )
+      regex_position = "(?:(?<=[=(,{\\[;:!~|&?])|(?<==>)|" \
+        "#{regex_words.map { |x| "(?<=\\b#{x} )" }.join('|')})"
+      # "token", "rule" and "regex" are ordinary words in "$x.rule",
+      # "rule => 1" or "/regex/"
+      not_a_regex_declarator = "(?<![#{w}'.:$@%&\\/<\\-])"
+
       alternatives = lambda do |words|
         words.sort_by { |x| -x.length }.map { |x| Regexp.escape(x) }.join('|')
       end
@@ -318,6 +337,7 @@ module Rouge
       method_builtins = (BUILTINS | METHODS | BUILTIN_CLASSES).sort
       open_brackets = Regexp.escape(BRACKETS.keys.join)
 
+      OPEN_BRACKET = /[#{open_brackets}]/
       HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\s*((?::[#{w}]+\s*)+)([^#{w}\s:])/
 
       start do
@@ -352,6 +372,78 @@ module Rouge
           when opener then depth += 1
           end
           return [body[0...-closer.length], closer] if depth.zero?
+        end
+      end
+
+      # Consumes the rest of a regex (or of the replacement of a
+      # substitution) opened with the delimiter +opener+ and returns its
+      # body and its closing delimiter. Unlike #scan_delimited this steps
+      # over quoted strings, so the delimiter may appear in them:
+      # rx/ '/tmp/' .* /
+      def scan_regex(stream, opener, match_variable: false)
+        mirror = BRACKETS[opener[0]]
+        closer = mirror ? mirror * opener.length : opener
+        closing = /#{Regexp.escape(closer)}/
+        opening = mirror && /#{Regexp.escape(opener)}/
+        plain = /[^\\'"$#{Regexp.escape((opener[0] + closer[0]).squeeze)}]+/
+        # only a quote that is closed on the same line counts
+        quoted = /'(?:\\.|[^'\\\n])*'|"(?:\\.|[^"\\\n])*"/
+        # "$/" in the replacement of s/.../.../ is the match variable,
+        # provided the real delimiter still follows on this line
+        variable = match_variable && /\$#{closing}(?=[^\n]*#{closing})/
+
+        body = +''
+        depth = 1
+        until stream.eos?
+          if (text = stream.scan(plain) || stream.scan(/\\./m) || stream.scan(quoted) ||
+                     (variable && stream.scan(variable)))
+            body << text
+          elsif stream.scan(closing)
+            depth -= 1
+            return [body, closer] if depth.zero?
+
+            body << closer
+          elsif opening && stream.scan(opening)
+            depth += 1
+            body << opener
+          else
+            body << stream.getch
+          end
+        end
+        [body, '']
+      end
+
+      # Lexes one delimited part of a regex-like construct, whose opening
+      # delimiter has just been consumed. The body is lexed in +state+,
+      # or is a plain token if there is none.
+      def lex_regex_part(stream, opener, state, match_variable: false)
+        body, closing = scan_regex(stream, opener, match_variable: match_variable)
+        if state
+          sublex body, state
+        else
+          token Str::Regex, body
+        end
+        token Str::Regex, closing
+      end
+
+      # s/pattern/replacement/, s{pattern}{replacement}, tr/from/to/, ...
+      def lex_substitution(stream, opening, kind, opener)
+        transliteration = kind.downcase == 'tr'
+
+        token Str::Regex, opening
+        lex_regex_part(stream, opener, transliteration ? nil : :regex_body)
+
+        replacement = transliteration ? nil : :interpolated
+        if BRACKETS[opener[0]].nil?
+          # s/a/b/ : the replacement follows directly, with the same delimiter
+          lex_regex_part(stream, opener, replacement, match_variable: true)
+        elsif stream.check(/\s*#{OPEN_BRACKET}/)
+          # s{a}{b} : another bracketed group, possibly after whitespace.
+          # Otherwise it is s{a} = b, an ordinary assignment.
+          token Text::Whitespace, stream.scan(/\s*/)
+          opener = stream.scan(/(.)\1*/m)
+          token Str::Regex, opener
+          lex_regex_part(stream, opener, replacement)
         end
       end
 
@@ -427,6 +519,16 @@ module Rouge
         rule %r/#[|=].*/, Comment::Special
         rule %r/#.*/, Comment::Single
 
+        # --- regex declarations, only when a name or a block follows
+        rule %r/#{not_a_regex_declarator}(regex|token|rule)(\s+)(#{ident}:sym)/ do
+          groups Keyword::Declaration, Text::Whitespace, Name::Function
+          push :token_sym_brackets
+        end
+        rule %r/#{not_a_regex_declarator}(regex|token|rule)(?=\s+[\p{L}\p{No}\p{Nl}_]|\s*\{)(?!\s+[#{w}]+\s*=>)(\s*)(#{qualified_ident})?/ do
+          groups Keyword::Declaration, Text::Whitespace, Name::Function
+          push :pre_token
+        end
+
         # deal with a special case in the Raku grammar (role q { ... })
         rule %r/(role)(\s+)(q)(\s*)/ do
           groups Keyword::Declaration, Text::Whitespace, Name, Text::Whitespace
@@ -452,6 +554,26 @@ module Rouge
           else
             token Str, opening + body + closing
           end
+        end
+
+        # --- regexes: m/x/, rx{x}, and with adverbs m:i/x/
+        rule %r/#{nw}(?:m|ms|rx)\s*(?::[#{w}\s:]+)?\s*(([^#{w}:\s=,;)])\2*)/ do |m|
+          opener = m[1]
+          token Str::Regex
+          lex_regex_part(m, opener, :regex_body)
+        end
+        # substitution and transliteration: s/a/b/, S{a}{b}, s:2nd/a/b/, tr/a-z/A-Z/
+        rule %r/#{nw}(ss|s|SS|S|tr|TR)(?=\s*:!?[#{w}])\s*(?::!?[#{w}\-]+(?:\([^)\n]*\))?\s*)+(([^#{w}:\s$@%&=,;)])\3*)/ do |m|
+          lex_substitution(m, m[0], m[1], m[2])
+        end
+        rule %r/#{nw}(ss|s|SS|S|tr|TR)\s*(([\/{(\[|!^~@%])\3*)/ do |m|
+          lex_substitution(m, m[0], m[1], m[2])
+        end
+        # a regex without m or rx: $s ~~ /x/, .subst(/x/, ''), say /x/
+        rule %r/#{regex_position}(\s*)(\/)(?!\/)(?=(?:\\[\s\S]|[^\/\\\n])*\/)/ do |m|
+          opener = m[2]
+          groups Text::Whitespace, Str::Regex
+          lex_regex_part(m, opener, :regex_body)
         end
 
         # --- curly and corner quotes: ‘raw’, “interpolating”, ｢no escapes｣
@@ -611,7 +733,91 @@ module Rouge
         rule %r/./m, Text
       end
 
-      # Code embedded in something else (a closure inside a string) is
+      # between "token name" and the block that holds its body
+      state :pre_token do
+        # a statement that ends before any block was not a declaration
+        rule %r/;/, Punctuation, :pop!
+        mixin :common
+        rule %r/\{/ do
+          token Punctuation
+          goto :token
+        end
+        rule %r/\s+/, Text::Whitespace
+        rule %r/[^#{w}\s]/, Operator
+        rule %r/./m, Text
+      end
+
+      # the bracketed part of a name: token infix:sym<+> { ... }
+      state :token_sym_brackets do
+        rule %r/(#{OPEN_BRACKET})\1*/ do |m|
+          opening = m[0]
+          token Name, opening + scan_delimited(m, opening).join
+          goto :pre_token
+        end
+        rule(//) { goto :pre_token }
+      end
+
+      state :token do
+        rule %r/\}/, Punctuation, :pop!
+        mixin :regex_body
+      end
+
+      # the body of a token, rule or regex, or of a m//, rx// or s///
+      # pattern
+      state :regex_body do
+        rule %r/\s+/, Text::Whitespace
+        rule %r/#.*/, Comment::Single
+        # :my $x = ...; declarations are ordinary code
+        rule %r/:(?=(?:my|our|state|constant|temp|let)\b)/, Punctuation
+        rule %r/(?<=:)(?:my|our|state|constant|temp|let).*?;/m do |m|
+          sublex m[0]
+        end
+        # adverbs: :i, :sigspace, :!ratchet, :Perl5(...)
+        rule %r/(:!?)([A-Za-z][#{w}\-]*)/ do
+          groups Punctuation, Name::Attribute
+        end
+        # character classes: <[a..z]>, <-[\d] + [_]>
+        rule %r/<(?:[-+!?.]\s*)?\[(?:\\.|[^\]\\])*\](?:\s*[-+]\s*(?:\[(?:\\.|[^\]\\])*\]|:?[#{w}\-]+))*\s*>/m, Str::Regex
+        # unicode properties: <:Lu>, <+:L>, <:L + :N>, <:L - [a]>
+        rule %r/<[-+!?.]?\s*:[#{w}\-]+(?:\([^)\n]*\))?(?:\s*[-+]\s*(?::[#{w}\-]+|\[(?:\\.|[^\]\\])*\]))*\s*>/m, Name::Builtin
+        # named assertions: <foo>, <.foo>, <?before ...>, <name=rule>
+        rule %r/(<)([?!.+-]?)(\s*)(#{ident})(=)(#{ident})(>)/ do
+          groups Punctuation, Punctuation, Text::Whitespace, Name::Variable,
+                 Operator, Name::Function, Punctuation
+        end
+        rule %r/(<)([?!.+-]?)(\s*)#{word_match.(REGEX_BUILTINS)}(>)?/ do
+          groups Punctuation, Punctuation, Text::Whitespace, Name::Builtin, Punctuation
+        end
+        rule %r/(<)([?!.+-]?)(\s*)(#{ident})(>)?/ do
+          groups Punctuation, Punctuation, Text::Whitespace, Name::Function, Punctuation
+        end
+        # code blocks and variables
+        rule %r/\{/ do
+          token Punctuation
+          @brace_levels << 1
+          push :embedded
+        end
+        rule %r/\$<[#{w}'\-]+>/, Name::Variable
+        rule %r/\$\d+/, Name::Variable
+        rule %r/[$@][.^:?=!~*]?#{qualified_ident}#{angle_subscripts}/, Name::Variable
+        # literals
+        rule %r/'(?:\\.|[^'\\])*'/m, Str::Single
+        rule %r/[‘‚][^‘’\n]*[’‘]/, Str::Single
+        rule %r/｢[^｣]*｣/, Str
+        rule %r/"/, Str::Double, :dq_string
+        rule %r/[“„]/, Str::Double, :dq_curly
+        rule %r/\\[xXcCoO]\[[^\]\n]*\]|\\x[0-9a-fA-F]+|\\./m, Str::Escape
+        # anchors, quantifiers, alternation, separators
+        rule %r/\^\^|\$\$|<<|>>|«|»|\^|\$/, Operator
+        rule %r/\*\*|\|\||&&|%%|\.\.\.?|::?:?|[|&*+?!%~=.]/, Operator
+        rule %r/[()\[\]<>]/, Punctuation
+        rule %r/\}/, Punctuation
+        rule %r/[#{w}]+/, Str::Regex
+        rule %r/./m, Str::Regex
+      end
+
+      # Code embedded in something else (a closure inside a string, or code
+      # inside a regex) is
       # lexed in this state, which keeps count of its own braces so it
       # knows when to hand control back.
       state :embedded do

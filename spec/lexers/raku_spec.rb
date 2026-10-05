@@ -78,13 +78,8 @@ describe Rouge::Lexers::Raku do
     end
   end
 
-  # Constructs the lexer does not handle yet: regexes and grammars, and Pod.
-  pending = %w(
-    test_digit_first_pairs test_pod test_pod_formatting
-    test_regex_grammar test_regex_literals test_regex_quoted_delimiter
-    test_regex_without_m test_regex_words_are_not_declarators
-    test_substitution test_token_names
-  )
+  # Constructs the lexer does not handle yet: Pod.
+  pending = %w(test_pod test_pod_formatting)
 
   describe 'snippets' do
     Support::Snippets.names.each do |name|
