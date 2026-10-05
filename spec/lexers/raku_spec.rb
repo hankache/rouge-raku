@@ -78,14 +78,9 @@ describe Rouge::Lexers::Raku do
     end
   end
 
-  # Constructs the lexer does not handle yet: Pod.
-  pending = %w(test_pod test_pod_formatting)
-
   describe 'snippets' do
     Support::Snippets.names.each do |name|
       it "lexes #{name}" do
-        skip 'not implemented yet' if pending.include?(name)
-
         expected = Support::Snippets.merge(Support::Snippets.tokens(name))
         text = expected.map(&:last).join
         actual = subject.lex(text).map { |tok, val| [tok.qualname, val] }

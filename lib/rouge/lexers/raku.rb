@@ -511,13 +511,29 @@ module Rouge
       # :embedded state counts braces to know where that code ends, so if
       # you process one of them, make sure you also process the other!
       state :common do
-        # --- comments
+        # --- comments and Pod
         rule %r/#[`|=](([#{open_brackets}])\2*)/ do |m|
           opening = m[0]
           token Comment::Multiline, opening + scan_delimited(m, m[1]).join
         end
         rule %r/#[|=].*/, Comment::Special
         rule %r/#.*/, Comment::Single
+
+        # everything after =finish
+        rule %r/^=finish\b.*/m do |m|
+          sublex m[0], :pod_body
+        end
+        # a delimited block: =begin pod ... =end pod
+        rule %r/^(\s*)=begin\s+([#{w}]+)\b.*?^\1=end\s+\2/m do |m|
+          sublex m[0], :pod_body
+        end
+        # paragraph and abbreviated blocks end at the first blank line
+        rule %r/^(\s*)=for.*?\n\s*?\n/m do |m|
+          sublex m[0], :pod_body
+        end
+        rule %r/^=.*?\n\s*?\n/m do |m|
+          sublex m[0], :pod_body
+        end
 
         # --- regex declarations, only when a name or a block follows
         rule %r/#{not_a_regex_declarator}(regex|token|rule)(\s+)(#{ident}:sym)/ do
@@ -837,6 +853,35 @@ module Rouge
         rule %r/\s+/, Text::Whitespace
         rule %r/[^#{w}\s]/, Operator
         rule %r/./m, Text
+      end
+
+      # Pod documentation blocks
+      state :pod_body do
+        rule %r/^(\s*)(=head\d*)(.*)/ do
+          groups Text::Whitespace, Comment::Preproc, Generic::Heading
+        end
+        rule %r/^(\s*)(=(?:begin|end|for|finish))([ \t]*)([#{w}]*)/ do
+          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
+        end
+        rule %r/^(\s*)(=[A-Za-z][#{w}]*)/ do
+          groups Text::Whitespace, Comment::Preproc
+        end
+        # formatting codes: B<bold>, I<italic>, C<code>, L<link>, ...
+        rule %r/(B)(<)([^<>\n]*)(>)/ do
+          groups Name::Decorator, Punctuation, Generic::Strong, Punctuation
+        end
+        rule %r/(I)(<)([^<>\n]*)(>)/ do
+          groups Name::Decorator, Punctuation, Generic::Emph, Punctuation
+        end
+        rule %r/([CKTV])(<)([^<>\n]*)(>)/ do
+          groups Name::Decorator, Punctuation, Str::Backtick, Punctuation
+        end
+        rule %r/([ALENPRSUXZ])(<)([^<>\n]*)(>)/ do
+          groups Name::Decorator, Punctuation, Comment::Multiline, Punctuation
+        end
+        rule %r/[^\n]+?(?=[A-Z]<|$)/, Comment::Multiline
+        rule %r/[A-Z]/, Comment::Multiline
+        rule %r/\n/, Text::Whitespace
       end
 
       # what can appear inside an interpolating string

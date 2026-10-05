@@ -3,10 +3,7 @@
 A [Raku](https://raku.org) lexer for the [Rouge](https://github.com/rouge-ruby/rouge)
 syntax highlighter, packaged as a plugin gem.
 
-> **Status:** early development, not yet published to RubyGems. Everything
-> but Pod is highlighted: comments, variables, numbers, keywords, types,
-> operators, strings, quote-like forms, heredocs, regexes, substitutions
-> and grammars.
+> **Status:** early development, not yet published to RubyGems.
 
 ## Usage
 
