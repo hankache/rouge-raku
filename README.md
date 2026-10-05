@@ -3,10 +3,10 @@
 A [Raku](https://raku.org) lexer for the [Rouge](https://github.com/rouge-ruby/rouge)
 syntax highlighter, packaged as a plugin gem.
 
-> **Status:** early development, not yet published to RubyGems. The core
-> of the language is highlighted: comments, variables, numbers, keywords,
-> types, operators and interpolating strings. Quote-like forms (`q`, `qq`,
-> heredocs), regexes and grammars, and Pod are not handled yet.
+> **Status:** early development, not yet published to RubyGems. Most of
+> the language is highlighted: comments, variables, numbers, keywords,
+> types, operators, strings, quote-like forms (`q`, `qq`, `Q`) and
+> heredocs. Regexes and grammars, and Pod, are not handled yet.
 
 ## Usage
 

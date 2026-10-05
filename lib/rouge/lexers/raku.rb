@@ -318,32 +318,100 @@ module Rouge
       method_builtins = (BUILTINS | METHODS | BUILTIN_CLASSES).sort
       open_brackets = Regexp.escape(BRACKETS.keys.join)
 
+      HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\s*((?::[#{w}]+\s*)+)([^#{w}\s:])/
+
       start do
         @brace_levels = []
       end
 
       # Consumes the rest of a construct opened with the delimiter +opener+
-      # and returns it, closing delimiter included. Mirrored delimiters
-      # nest. An unclosed construct runs to the end of the input.
-      def scan_delimited(stream, opener)
+      # and returns its body and its closing delimiter. Mirrored delimiters
+      # nest. An unclosed construct runs to the end of the input, and has
+      # an empty closing delimiter.
+      def scan_delimited(stream, opener, escapes: false)
         mirror = BRACKETS[opener[0]]
         closer = mirror ? mirror * opener.length : opener
-        delimiters = Regexp.union(*[closer, opener].uniq)
+        patterns = [closer, opener].uniq.map { |x| Regexp.escape(x) }
+        # a backslash hides the delimiter that follows it
+        patterns << '\\\\.' if escapes
+        delimiters = /#{patterns.join('|')}/m
 
-        text = +''
+        body = +''
         depth = 1
-        while depth > 0
+        loop do
           chunk = stream.scan_until(delimiters)
           if chunk.nil?
-            text << stream.rest
+            body << stream.rest
             stream.terminate
-            break
+            return [body, '']
           end
 
-          text << chunk
-          depth += stream.matched == closer ? -1 : 1
+          body << chunk
+          case stream.matched
+          when closer then depth -= 1
+          when opener then depth += 1
+          end
+          return [body[0...-closer.length], closer] if depth.zero?
         end
-        text
+      end
+
+      # Lexes +text+ on its own, starting in +state+.
+      def sublex(text, state = :root)
+        lexer = self.class.new(options)
+        lexer.reset!
+        lexer.push(state) unless state == :root
+        delegate(lexer, text)
+      end
+
+      # Lexes what follows the opening quote of a heredoc: the rest of
+      # that line, which is ordinary code, and then the heredoc's body.
+      def lex_heredocs(stream, terminator, interpolate)
+        rest_of_line = stream.scan(/[^\n]*/)
+        sublex rest_of_line
+        return unless stream.scan(/\n/)
+
+        token Text::Whitespace, "\n"
+
+        # the bodies follow in the order their heredocs were opened
+        heredocs = [[terminator, interpolate]] + extra_heredocs(rest_of_line)
+        heredocs.each_with_index do |(name, interpolates), index|
+          last_line = /^[ \t]*#{Regexp.escape(name)}[ \t]*$/
+          body = stream.scan_until(/(?=#{last_line})/)
+          if body.nil?
+            body = stream.rest
+            stream.terminate
+          end
+
+          if interpolates
+            sublex body, :interpolated
+          else
+            token Str, body
+          end
+          break if stream.eos?
+
+          token Str, stream.scan(last_line)
+          if index + 1 < heredocs.length && stream.scan(/\n/)
+            token Text::Whitespace, "\n"
+          end
+        end
+      end
+
+      # Heredocs opened later on the same line, as pairs of terminator
+      # and whether the body interpolates.
+      def extra_heredocs(line)
+        found = []
+        pos = 0
+        while (match = HEREDOC_OPENER.match(line, pos))
+          pos = match.end(0)
+          quote, adverbs, opener = match.captures
+          next unless adverbs.match?(/:to\b/)
+
+          stop = line.index(BRACKETS.fetch(opener, opener), pos)
+          next unless stop
+
+          found << [line[pos...stop], quote == 'qq' || adverbs.include?(':qq')]
+        end
+        found
       end
 
       # If you're modifying these rules, be careful if you need to process
@@ -354,7 +422,7 @@ module Rouge
         # --- comments
         rule %r/#[`|=](([#{open_brackets}])\2*)/ do |m|
           opening = m[0]
-          token Comment::Multiline, opening + scan_delimited(m, m[1])
+          token Comment::Multiline, opening + scan_delimited(m, m[1]).join
         end
         rule %r/#[|=].*/, Comment::Special
         rule %r/#.*/, Comment::Single
@@ -362,6 +430,28 @@ module Rouge
         # deal with a special case in the Raku grammar (role q { ... })
         rule %r/(role)(\s+)(q)(\s*)/ do
           groups Keyword::Declaration, Text::Whitespace, Name, Text::Whitespace
+        end
+
+        # --- quote-like constructs: q/raw/, qq{interpolating}, Q[literal]
+        # and heredocs (q:to/END/). Before the keyword and builtin rules,
+        # which would otherwise take q for a word.
+        rule %r/#{nw}(qq|q|Q)[a-zA-Z]?\s*(:[#{w}\s:]+)?\s*(([^0-9a-zA-Z:\s=,;)])\4*)/ do |m|
+          opening = m[0]
+          adverbs = m[2].to_s
+          # qq strings (and the :qq / :c adverbs) interpolate
+          interpolate = m[1] == 'qq' || adverbs.match?(/:(?:qq|c)\b/)
+          body, closing = scan_delimited(m, m[3], escapes: true)
+
+          if adverbs.match?(/:to\b/)
+            token Str, opening + body + closing
+            lex_heredocs(m, body, interpolate)
+          elsif interpolate
+            token Str, opening
+            sublex body, :interpolated
+            token Str, closing
+          else
+            token Str, opening + body + closing
+          end
         end
 
         # --- curly and corner quotes: ‘raw’, “interpolating”, ｢no escapes｣
@@ -560,6 +650,13 @@ module Rouge
           @brace_levels << 1
           push :embedded
         end
+      end
+
+      # the body of a qq string or of an interpolating heredoc
+      state :interpolated do
+        mixin :interpolation
+        rule %r/[^\\$@%&{]+/, Str::Double
+        rule %r/[$@%&\\]/, Str::Double
       end
 
       state :dq_string do
