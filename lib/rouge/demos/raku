@@ -1,0 +1,6 @@
+# Greet everyone on the command line
+sub MAIN(*@names) {
+    for @names -> $name {
+        say "Hello, $name!";
+    }
+}
