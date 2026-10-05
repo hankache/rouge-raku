@@ -3,8 +3,10 @@
 A [Raku](https://raku.org) lexer for the [Rouge](https://github.com/rouge-ruby/rouge)
 syntax highlighter, packaged as a plugin gem.
 
-> **Status:** early development. The lexer is currently a stub that only
-> recognises comments; it is not yet published to RubyGems.
+> **Status:** early development, not yet published to RubyGems. The core
+> of the language is highlighted: comments, variables, numbers, keywords,
+> types, operators and interpolating strings. Quote-like forms (`q`, `qq`,
+> heredocs), regexes and grammars, and Pod are not handled yet.
 
 ## Usage
 
@@ -36,6 +38,9 @@ bundle exec rake
 The layout follows Rouge's own conventions (`lib/rouge/lexers/raku.rb`,
 `lib/rouge/demos/raku`, `spec/lexers/raku_spec.rb`,
 `spec/visual/samples/raku`) so the lexer can be offered upstream later.
+
+The files in `spec/snippets/raku` each hold a piece of Raku and the tokens
+it should produce, and the spec checks the lexer against them.
 
 ## License
 
