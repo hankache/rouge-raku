@@ -22,5 +22,5 @@ Gem::Specification.new do |s|
     "rubygems_mfa_required" => "true"
   }
 
-  s.add_dependency 'rouge', '~> 5.0'
+  s.add_dependency 'rouge', '>= 3.26', '< 6'
 end

@@ -69,6 +69,15 @@ describe Rouge::Lexers::Raku do
         ['Literal.Number.Integer', '2']
     end
 
+    # this needs a scanner that anchors on the whole input, which Rouge
+    # only has from version 5.0 on; see lib/rouge/raku.rb
+    it 'looks behind the text it is matching' do
+      assert_tokens_equal '$x.Str',
+        ['Name.Variable', '$x'],
+        ['Operator', '.'],
+        ['Name.Builtin', 'Str']
+    end
+
     it 'lexes the demo without errors' do
       assert_no_errors Rouge::Lexers::Raku.demo
     end
