@@ -121,7 +121,7 @@ sub prefix:["\x[2213]"] ($t) { "A$t" }; sub infix:['x'] { }
 '{'           Punctuation
 ' '           Text.Whitespace
 '"A'          Literal.String.Double
-'$t'          Literal.String.Interpol
+'$t'          Name.Variable
 '"'           Literal.String.Double
 ' '           Text.Whitespace
 '};'          Punctuation

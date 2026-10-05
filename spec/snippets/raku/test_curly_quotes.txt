@@ -10,7 +10,7 @@ say ‘it's "fine"’.chars;
 ' '           Text.Whitespace
 '“'           Literal.String.Double
 'dbl '        Literal.String.Double
-'$x'          Literal.String.Interpol
+'$x'          Name.Variable
 ' '           Literal.String.Double
 '{'           Punctuation
 '1'           Literal.Number.Integer

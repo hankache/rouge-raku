@@ -19,7 +19,7 @@ say $t;
 '\n'          Text.Whitespace
 
 '    Hi '     Literal.String.Double
-'$name'       Literal.String.Interpol
+'$name'       Name.Variable
 ', '          Literal.String.Double
 '{'           Punctuation
 '"'           Literal.String.Double

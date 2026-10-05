@@ -8,7 +8,10 @@ qq{a {$x} b $y.uc() c}; q[plain $x {1}]; Q:qq<$z>
 '$x'          Name.Variable
 '}'           Punctuation
 ' b '         Literal.String.Double
-'$y.uc()'     Literal.String.Interpol
+'$y'          Name.Variable
+'.'           Operator
+'uc'          Name.Builtin
+'()'          Punctuation
 ' c'          Literal.String.Double
 '}'           Literal.String
 ';'           Punctuation
@@ -17,6 +20,6 @@ qq{a {$x} b $y.uc() c}; q[plain $x {1}]; Q:qq<$z>
 ';'           Punctuation
 ' '           Text.Whitespace
 'Q:qq<'       Literal.String
-'$z'          Literal.String.Interpol
+'$z'          Name.Variable
 '>'           Literal.String
 '\n'          Text.Whitespace

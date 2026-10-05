@@ -16,7 +16,7 @@ my $r = qh ~~ Setty ?? 1 !! 2; say (m ?? 2 !! 0);
 'qq||'        Literal.String
 '}'           Punctuation
 '] '          Literal.String.Double
-'$m'          Literal.String.Interpol
+'$m'          Name.Variable
 '"'           Literal.String.Double
 ';'           Punctuation
 ' '           Text.Whitespace

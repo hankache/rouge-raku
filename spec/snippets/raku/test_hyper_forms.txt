@@ -12,10 +12,10 @@ say «a $b»;
 'say'         Name.Builtin
 ' '           Text.Whitespace
 '('           Punctuation
-'&f'          Name.Variable
+'&f'          Name.Function
 ','           Punctuation
 ' '           Text.Whitespace
-'&g'          Name.Variable
+'&g'          Name.Function
 ')'           Punctuation
 '»'           Operator
 '.'           Operator
@@ -76,7 +76,7 @@ say «a $b»;
 ' '           Text.Whitespace
 '«'           Literal.String.Double
 'a '          Literal.String.Double
-'$b'          Literal.String.Interpol
+'$b'          Name.Variable
 '»'           Literal.String.Double
 ';'           Punctuation
 '\n'          Text.Whitespace

@@ -22,7 +22,10 @@ say $x;
 'S:g/'        Literal.String.Regex
 '@a'          Name.Variable
 '/'           Literal.String.Regex
-'%h{$/}'      Literal.String.Interpol
+'%h'          Name.Variable
+'{'           Punctuation
+'$/'          Name.Variable.Global
+'}'           Punctuation
 '/'           Literal.String.Regex
 ' '           Text.Whitespace
 'given'       Keyword

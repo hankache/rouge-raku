@@ -304,6 +304,12 @@ module Rouge
       smiley = "(?::[UD_](?![#{w}'\\-]))"
       after_dot = '(?:(?<=\.)(?<!\.\.)|(?<=\.[\^?&+*]))'
       subscript = '(?:\[[^\]\n]*\]|\{[^}\n]*\}|<[^>\n]*>)'
+      # the arguments of a call, with one level of nested parentheses;
+      # a parenthesis in a quoted string does not count
+      # (atomic and possessive, so that it can not backtrack for ages)
+      arguments = '\((?>\'[^\'\n]*\'|"[^"\n]*"|[^()\n]|\([^()\n]*\))*+\)'
+      # what can follow a variable in a string: a subscript or a method call
+      postfix = "(?:#{subscript}|\\.[\\^?&]?#{ident}#{arguments})"
       # %h<key>, %h<<$key>>, %h«key»; kept to one line so that a stray '<'
       # in code can't swallow what follows it
       angle_subscripts = '(?:<<[^>\n]*>>|<[^>\n]*>|«[^»\n]*»)*'
@@ -365,6 +371,7 @@ module Rouge
       # of a type: "$x.Int" calls the coercion method, it does not name
       # the type.
       method_builtins = (BUILTINS | METHODS | BUILTIN_CLASSES).sort
+      builtins = Set.new(BUILTINS)
 
       OPEN_BRACKET = /[#{open_brackets}]/
       HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\p{Space}*((?::[#{w}]+\p{Space}*)+)([^#{w}\p{Space}:])/
@@ -583,7 +590,12 @@ module Rouge
         rule %r/::\?[#{w}]+/, Name::Variable::Global
         rule %r/[$@%&]\*#{qualified_ident}#{angle_subscripts}/, Name::Variable::Global
         rule %r/\$[!\/¢]#{angle_subscripts}/, Name::Variable::Global
-        rule %r/&#{op_categories}#{op_name_suffix}/, Name::Variable
+        # the & sigil names a routine: &infix:<+>, &squared, &squared(2),
+        # which may be one that comes with the language: &elems
+        rule %r/&#{op_categories}#{op_name_suffix}/, Name::Function
+        rule %r/&(?:::)?(#{qualified_ident})/ do |m|
+          token builtins.include?(m[1]) ? Name::Builtin : Name::Function
+        end
         rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}|\p{Nd}+)#{angle_subscripts}/, Name::Variable
         rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
         # anonymous variables: "state $ = 0", "$++"
@@ -777,6 +789,12 @@ module Rouge
         # assignment meta operators: +=, //=, ||=, ...
         rule %r/(?:\*\*|\/\/|\|\||&&|%%|[-+*\/%~|&^?])=(?![=~>])/, Operator
         rule %r/#{any_of.(SYMBOL_OPERATORS)}/, Operator
+        # A name right before a parenthesis is a call: squared(2). Unless
+        # it is capitalized, as types are, which can be called to coerce:
+        # Foo($x)
+        rule %r/#{qualified_ident}(?=\()/ do |m|
+          token m[0].match?(/(?:\A|::)\p{Lu}[^:]*\z/) ? Name : Name::Function
+        end
         rule %r/#{qualified_ident}/, Name
         rule %r/'(?:\\\\|\\[^\\]|[^'\\])*'/, Str::Single
         rule %r/"/, Str::Double, :dq_string
@@ -928,14 +946,18 @@ module Rouge
       state :interpolation do
         rule %r/\\(?:[abefnrt0"'\\$@%&{}<>«»]|[xXoOcCdD]\[[^\]\n]*\]|x[0-9a-fA-F]+)/, Str::Escape
         rule %r/\\./m, Str::Double
-        # contextualizers: $(...), @(...)
-        rule %r/[$@%&]\((?:[^()\n]|\([^()\n]*\))*\)/, Str::Interpol
-        # scalars always interpolate, optionally followed by subscripts
-        # and method calls with parentheses
-        rule %r/\$(?:[*.!^?=~:]?#{qualified_ident}|[!\/&¢]|\p{Nd}+|<[^>\n]+>)(?:#{subscript}|\.#{ident}\([^)\n]*\))*/, Str::Interpol
-        # arrays, hashes and functions only if they are subscripted/called
-        rule %r/[@%][*.!^?=~:]?#{qualified_ident}#{subscript}(?:#{subscript})*/, Str::Interpol
-        rule %r/&#{ident}\([^)\n]*\)/, Str::Interpol
+        # What interpolates is code, and is lexed as code, so that a
+        # variable looks the same inside a string as outside of it.
+        # - contextualizers: $(...), @(...)
+        # - scalars: $x
+        # - arrays and hashes only if something in brackets or parentheses
+        #   follows: @a[0], %h<a>, @a.elems()
+        # - functions only if they are called: &f()
+        # Each can be followed by subscripts and by method calls, which
+        # need their parentheses here: $x[0]<a>, $x.uc(), @a.sort().join(',')
+        rule %r/(?:[$@%&]#{arguments}#{postfix}*|\$(?:[*.!^?=~:]?#{qualified_ident}|[!\/&¢]|\p{Nd}+|<[^>\n]+>)#{postfix}*|[@%][*.!^?=~:]?#{qualified_ident}#{postfix}+|&#{ident}#{arguments}#{postfix}*)/ do |m|
+          sublex m[0]
+        end
         rule %r/\{/ do
           token Punctuation
           @brace_levels << 1

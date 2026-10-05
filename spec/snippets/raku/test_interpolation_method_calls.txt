@@ -1,0 +1,107 @@
+---input---
+say "no: @a.elems, %h.keys, $x.abs, &squared, me@example.com, 50% off";
+say "yes: @a.elems() %h.keys() $x.abs() &elems(@a) $x.^name()";
+say "chains: @a[0].abs() @a.map(*.abs).join(',') $obj.list()[0] @a.sort.join()";
+say "quotes: @a.join(', ') @a.join('(') @a.join(")") and it's (fine)";
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"no: @a.elems, %h.keys, ' Literal.String.Double
+'$x'          Name.Variable
+'.abs, &squared, me@example.com, 50% off"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"yes: '      Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'elems'       Name.Builtin
+'()'          Punctuation
+' '           Literal.String.Double
+'%h'          Name.Variable
+'.'           Operator
+'keys'        Name.Builtin
+'()'          Punctuation
+' '           Literal.String.Double
+'$x'          Name.Variable
+'.'           Operator
+'abs'         Name.Builtin
+'()'          Punctuation
+' '           Literal.String.Double
+'&elems'      Name.Builtin
+'('           Punctuation
+'@a'          Name.Variable
+')'           Punctuation
+' '           Literal.String.Double
+'$x'          Name.Variable
+'.^'          Operator
+'name'        Name.Builtin
+'()'          Punctuation
+'"'           Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"chains: '   Literal.String.Double
+'@a'          Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+'.'           Operator
+'abs'         Name.Builtin
+'()'          Punctuation
+' '           Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'map'         Name.Builtin
+'('           Punctuation
+'*.'          Operator
+'abs'         Name.Builtin
+')'           Punctuation
+'.'           Operator
+'join'        Name.Builtin
+'('           Punctuation
+'\',\''       Literal.String.Single
+')'           Punctuation
+' '           Literal.String.Double
+'$obj'        Name.Variable
+'.'           Operator
+'list'        Name.Builtin
+'()['         Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' @a.sort.join()"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"quotes: '   Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'join'        Name.Builtin
+'('           Punctuation
+'\', \''      Literal.String.Single
+')'           Punctuation
+' '           Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'join'        Name.Builtin
+'('           Punctuation
+'\'(\''       Literal.String.Single
+')'           Punctuation
+' '           Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'join'        Name.Builtin
+'('           Punctuation
+'")"'         Literal.String.Double
+')'           Punctuation
+' and it\'s (fine)"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+

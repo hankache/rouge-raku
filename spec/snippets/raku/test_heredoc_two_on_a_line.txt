@@ -26,7 +26,7 @@ say $a;
 '\n'          Text.Whitespace
 
 'x '          Literal.String.Double
-'$v'          Literal.String.Interpol
+'$v'          Name.Variable
 '\n'          Literal.String.Double
 
 'A'           Literal.String

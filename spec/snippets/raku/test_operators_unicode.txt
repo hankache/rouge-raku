@@ -111,10 +111,10 @@ say 1 ≤ 2 ≥ 1 ≠ 3; say 6 × 7 ÷ 2 − 1; say &f ∘ &g;
 ' '           Text.Whitespace
 'say'         Name.Builtin
 ' '           Text.Whitespace
-'&f'          Name.Variable
+'&f'          Name.Function
 ' '           Text.Whitespace
 '∘'           Operator
 ' '           Text.Whitespace
-'&g'          Name.Variable
+'&g'          Name.Function
 ';'           Punctuation
 '\n'          Text.Whitespace

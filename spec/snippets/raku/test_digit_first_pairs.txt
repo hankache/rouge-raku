@@ -14,7 +14,7 @@ Date.new(:2015year, :12month);
 '/'           Literal.String.Regex
 ';'           Punctuation
 ' '           Text.Whitespace
-'f'           Name
+'f'           Name.Function
 '('           Punctuation
 ':'           Punctuation
 '1'           Literal.Number.Integer

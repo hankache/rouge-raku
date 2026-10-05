@@ -1,0 +1,184 @@
+---input---
+sub squared ($x --> Int) { return $x ** 2 }
+say "squared: " ~ squared(2); say "squared: &squared(2)"; say "$x.sqrt() and @a[0]";
+my &f = &squared; say f(3), &infix:<+>(1, 2), @a.map(&uc); sub apply(&code) { code() }
+say My::Module::helper(1), Foo::Bar($x), Foo($x), Int($x), my-func(1), squared (2), squared 2;
+if ($x) { say(1) }; is squared(2), 4, 'a call after is';
+
+---tokens---
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'squared'     Name.Function
+' '           Text.Whitespace
+'('           Punctuation
+'$x'          Name.Variable
+' '           Text.Whitespace
+'-->'         Operator
+' '           Text.Whitespace
+'Int'         Keyword.Type
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'return'      Keyword
+' '           Text.Whitespace
+'$x'          Name.Variable
+' '           Text.Whitespace
+'**'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"squared: "' Literal.String.Double
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'squared'     Name.Function
+'('           Punctuation
+'2'           Literal.Number.Integer
+');'          Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"squared: '  Literal.String.Double
+'&squared'    Name.Function
+'('           Punctuation
+'2'           Literal.Number.Integer
+')'           Punctuation
+'"'           Literal.String.Double
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"'           Literal.String.Double
+'$x'          Name.Variable
+'.'           Operator
+'sqrt'        Name.Builtin
+'()'          Punctuation
+' and '       Literal.String.Double
+'@a'          Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+'"'           Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'&f'          Name.Function
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'&squared'    Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'f'           Name.Function
+'('           Punctuation
+'3'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'&infix:<+>'  Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+'.'           Operator
+'map'         Name.Builtin
+'('           Punctuation
+'&uc'         Name.Builtin
+');'          Punctuation
+' '           Text.Whitespace
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'apply'       Name.Function
+'('           Punctuation
+'&code'       Name.Function
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'code'        Name.Function
+'()'          Punctuation
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'My::Module::helper' Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'Foo::Bar'    Name
+'('           Punctuation
+'$x'          Name.Variable
+'),'          Punctuation
+' '           Text.Whitespace
+'Foo'         Name
+'('           Punctuation
+'$x'          Name.Variable
+'),'          Punctuation
+' '           Text.Whitespace
+'Int'         Keyword.Type
+'('           Punctuation
+'$x'          Name.Variable
+'),'          Punctuation
+' '           Text.Whitespace
+'my-func'     Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'squared'     Name
+' '           Text.Whitespace
+'('           Punctuation
+'2'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'squared'     Name
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'if'          Keyword
+' '           Text.Whitespace
+'('           Punctuation
+'$x'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+'('           Punctuation
+'1'           Literal.Number.Integer
+')'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'squared'     Name.Function
+'('           Punctuation
+'2'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'4'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'\'a call after is\'' Literal.String.Single
+';'           Punctuation
+'\n'          Text.Whitespace
+

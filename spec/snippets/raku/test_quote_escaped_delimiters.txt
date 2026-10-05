@@ -33,7 +33,7 @@ my $z = qq[a\]$b];
 'qq['         Literal.String
 'a'           Literal.String.Double
 '\\]'         Literal.String.Double
-'$b'          Literal.String.Interpol
+'$b'          Name.Variable
 ']'           Literal.String
 ';'           Punctuation
 '\n'          Text.Whitespace

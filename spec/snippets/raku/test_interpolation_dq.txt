@@ -4,15 +4,26 @@
 ---tokens---
 '"'           Literal.String.Double
 'Hi '         Literal.String.Double
-'$name'       Literal.String.Interpol
+'$name'       Name.Variable
 ', '          Literal.String.Double
-'@list[0]'    Literal.String.Interpol
+'@list'       Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
 ' '           Literal.String.Double
-'%h<k>'       Literal.String.Interpol
+'%h<k>'       Name.Variable
 ' '           Literal.String.Double
-'$obj.meth(1)' Literal.String.Interpol
+'$obj'        Name.Variable
+'.'           Operator
+'meth'        Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+')'           Punctuation
 ' '           Literal.String.Double
-'&f(2)'       Literal.String.Interpol
+'&f'          Name.Function
+'('           Punctuation
+'2'           Literal.Number.Integer
+')'           Punctuation
 ' '           Literal.String.Double
 '{'           Punctuation
 '1'           Literal.Number.Integer

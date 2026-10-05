@@ -75,10 +75,10 @@ say infix:<+>(1, 2); my &op = &infix:<*>;
 ' '           Text.Whitespace
 'my'          Keyword.Declaration
 ' '           Text.Whitespace
-'&op'         Name.Variable
+'&op'         Name.Function
 ' '           Text.Whitespace
 '='           Operator
 ' '           Text.Whitespace
-'&infix:<*>'  Name.Variable
+'&infix:<*>'  Name.Function
 ';'           Punctuation
 '\n'          Text.Whitespace

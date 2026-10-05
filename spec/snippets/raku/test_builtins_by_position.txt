@@ -7,7 +7,7 @@ my $p = start { 1 }; say $p.start, $/.made, .last; last;
 ---tokens---
 'say'         Name.Builtin
 ' '           Text.Whitespace
-'add'         Name
+'add'         Name.Function
 '('           Punctuation
 '2'           Literal.Number.Integer
 ','           Punctuation

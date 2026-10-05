@@ -16,7 +16,7 @@ say ~&marine, +&foo;
 ','           Punctuation
 ' '           Text.Whitespace
 '<<'          Literal.String.Double
-'$x'          Literal.String.Interpol
+'$x'          Name.Variable
 ' y'          Literal.String.Double
 '>>'          Literal.String.Double
 ';'           Punctuation
@@ -25,10 +25,10 @@ say ~&marine, +&foo;
 'say'         Name.Builtin
 ' '           Text.Whitespace
 '~'           Operator
-'&marine'     Name.Variable
+'&marine'     Name.Function
 ','           Punctuation
 ' '           Text.Whitespace
 '+'           Operator
-'&foo'        Name.Variable
+'&foo'        Name.Function
 ';'           Punctuation
 '\n'          Text.Whitespace

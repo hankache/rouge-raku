@@ -103,7 +103,7 @@ grammar G {
 ' '           Text.Whitespace
 '"'           Literal.String.Double
 'q'           Literal.String.Double
-'$x'          Literal.String.Interpol
+'$x'          Name.Variable
 '"'           Literal.String.Double
 ' '           Text.Whitespace
 '}'           Punctuation

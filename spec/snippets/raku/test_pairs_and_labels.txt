@@ -23,7 +23,7 @@ my Int:D $z = 1;
 '}'           Punctuation
 '\n'          Text.Whitespace
 
-'f'           Name
+'f'           Name.Function
 '('           Punctuation
 ':'           Punctuation
 'verbose'     Name.Attribute
