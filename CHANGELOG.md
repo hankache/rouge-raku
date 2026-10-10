@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.0
 
 - Quotes: `q.new` and `q'x` are names, `q(1)`, `m(1)` and `s(1)` are calls,
   and `s[0]` is an index, none of them the start of a quote or a regex. A
