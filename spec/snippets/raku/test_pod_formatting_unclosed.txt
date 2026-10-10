@@ -1,0 +1,42 @@
+---input---
+=begin pod
+An N<unclosed note
+on two lines
+
+A new paragraph with C<code>.
+=end pod
+say 1;
+
+---tokens---
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
+
+'An '         Comment.Multiline
+'N'           Name.Decorator
+'<'           Punctuation
+'unclosed note' Comment.Multiline
+'\n'          Text.Whitespace
+
+'on two lines' Comment.Multiline
+'\n\n'        Text.Whitespace
+
+'A new paragraph with ' Comment.Multiline
+'C'           Name.Decorator
+'<'           Punctuation
+'code'        Literal.String.Backtick
+'>'           Punctuation
+'.'           Comment.Multiline
+'\n'          Text.Whitespace
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

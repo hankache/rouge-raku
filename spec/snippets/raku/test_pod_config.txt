@@ -1,0 +1,44 @@
+---input---
+=begin table :caption("x") :!numbered :kind<Type>
+a | b
+=end table
+
+=for comment :hidden
+some text
+
+
+---tokens---
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'table'       Name.Namespace
+' '           Text.Whitespace
+':'           Punctuation
+'caption'     Name.Attribute
+'("x")'       Literal.String
+' '           Text.Whitespace
+':!'          Punctuation
+'numbered'    Name.Attribute
+' '           Text.Whitespace
+':'           Punctuation
+'kind'        Name.Attribute
+'<Type>'      Literal.String
+'\n'          Text.Whitespace
+
+'a | b'       Comment.Multiline
+'\n'          Text.Whitespace
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'table'       Name.Namespace
+'\n\n'        Text.Whitespace
+
+'=for'        Comment.Preproc
+' '           Text.Whitespace
+'comment'     Name.Namespace
+' '           Text.Whitespace
+':'           Punctuation
+'hidden'      Name.Attribute
+'\n'          Text.Whitespace
+
+'some text'   Comment.Multiline
+'\n\n'        Text.Whitespace

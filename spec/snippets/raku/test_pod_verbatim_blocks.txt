@@ -1,0 +1,27 @@
+---input---
+=begin comment
+B<not> a code
+    =begin comment
+    =end comment
+still a comment
+=end comment
+say 1;
+
+---tokens---
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'comment'     Name.Namespace
+'\n'          Text.Whitespace
+
+'B<not> a code\n    =begin comment\n    =end comment\nstill a comment\n' Comment.Multiline
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'comment'     Name.Namespace
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

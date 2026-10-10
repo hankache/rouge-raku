@@ -1,0 +1,55 @@
+---input---
+=begin pod
+Use C<< a > b >> or C« x » and L«C<last>|/language/control» here.
+B<bold with I<italic> inside> and C<%h<key>> too.
+=end pod
+
+---tokens---
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
+
+'Use '        Comment.Multiline
+'C'           Name.Decorator
+'<<'          Punctuation
+' a > b '     Literal.String.Backtick
+'>>'          Punctuation
+' or '        Comment.Multiline
+'C'           Name.Decorator
+'«'           Punctuation
+' x '         Literal.String.Backtick
+'»'           Punctuation
+' and '       Comment.Multiline
+'L'           Name.Decorator
+'«'           Punctuation
+'C'           Name.Decorator
+'<'           Punctuation
+'last'        Literal.String.Backtick
+'>'           Punctuation
+'|/language/control' Comment.Multiline
+'»'           Punctuation
+' here.'      Comment.Multiline
+'\n'          Text.Whitespace
+
+'B'           Name.Decorator
+'<'           Punctuation
+'bold with '  Generic.Strong
+'I'           Name.Decorator
+'<'           Punctuation
+'italic'      Generic.Emph
+'>'           Punctuation
+' inside'     Generic.Strong
+'>'           Punctuation
+' and '       Comment.Multiline
+'C'           Name.Decorator
+'<'           Punctuation
+'%h<key>'     Literal.String.Backtick
+'>'           Punctuation
+' too.'       Comment.Multiline
+'\n'          Text.Whitespace
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace

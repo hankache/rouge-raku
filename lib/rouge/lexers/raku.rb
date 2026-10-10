@@ -291,7 +291,16 @@ module Rouge
         ｛｝ ｟｠ ｢｣
       ).to_h(&:chars).freeze
 
+      # what the text of a Pod formatting code looks like
+      POD_FORMATS = {
+        'B' => Generic::Strong, 'I' => Generic::Emph, 'C' => Str::Backtick,
+        'K' => Str::Backtick, 'T' => Str::Backtick, 'V' => Str::Backtick,
+      }.freeze
+
       # --- building blocks for the rules below
+
+      # the lines of a Pod paragraph: up to a blank line or a directive
+      pod_paragraph = '(?:(?![ \t]*$|[ \t]*=[A-Za-z])[^\n]*\n?)*'
 
       # Ruby's \w, \d and \s are ASCII-only. Raku is not, so the rules use
       # \p{Nd} and \p{Space}, and word characters are spelled out.
@@ -418,6 +427,7 @@ module Rouge
 
       start do
         @brace_levels = []
+        @pod_formats = []
       end
 
       # Consumes the rest of a construct opened with the delimiter +opener+
@@ -532,6 +542,36 @@ module Rouge
         found = !closing.empty? && stream.match?(/\p{Space}*(?:[-+*\/%~|&^]{0,2}=(?![=>~:])|#{OPEN_BRACKET})/o)
         stream.pos = start
         found
+      end
+
+      # Lexes a Pod block whose content is not Pod: its first line, of
+      # which +opening+ are the tokens up to the +name+ of the block and
+      # +config+ is what follows it, and then its +body+. Code is Raku,
+      # unless the block says that it is something else: =begin code
+      # :lang<shell>
+      def lex_pod_verbatim(name, config, body, opening)
+        token Text::Whitespace, opening[0]
+        token Comment::Preproc, opening[1]
+        token Text::Whitespace, opening[2]
+        token Name::Namespace, name
+        sublex config, :pod_config_line
+
+        if name == 'code' && !config.match?(/:lang<(?!raku>)/)
+          sublex body
+        else
+          token Comment::Multiline, body
+        end
+      end
+
+      # Opens the Pod formatting code +letter+, as in B<bold>. What closes
+      # it, how its text looks and how many angle brackets are open inside
+      # it are kept until it is closed.
+      def open_pod_format(letter, opener)
+        token Name::Decorator, letter
+        token Punctuation, opener
+        closer = BRACKETS[opener[0]] * opener.length
+        @pod_formats << [closer, POD_FORMATS.fetch(letter, Comment::Multiline), 0]
+        push :pod_format
       end
 
       # Lexes +text+ on its own, starting in +state+.
@@ -986,31 +1026,106 @@ module Rouge
 
       # Pod documentation blocks
       state :pod_body do
-        rule %r/^(\p{Space}*)(=head\p{Nd}*)(.*)/ do
+        # Blocks whose content is taken as it is: a "=begin" inside one
+        # does not open a block, and the "=end" has to be indented like
+        # the "=begin", so that an indented example does not end it.
+        rule %r/^([ \t]*)(=begin)([ \t]+)(code|comment|input|output|data)(?![#{w}\-])([^\n]*\n)(.*?)(?=^\1=end[ \t]+\4(?![#{w}\-]))/m do |m|
+          lex_pod_verbatim(m[4], m[5], m[6], [m[1], m[2], m[3]])
+        end
+        # the same as a paragraph, which ends at a blank line or at the
+        # next directive, and abbreviated: =code say 1;
+        rule %r/^([ \t]*)(=for)([ \t]+)(code)(?![#{w}\-])([^\n]*\n?)(#{pod_paragraph})/ do |m|
+          lex_pod_verbatim(m[4], m[5], m[6], [m[1], m[2], m[3]])
+        end
+        rule %r/^([ \t]*)(=code)(?![#{w}\-])([ \t]*)(#{pod_paragraph})/ do |m|
+          code = m[4]
+          token Text::Whitespace, m[1]
+          token Comment::Preproc, m[2]
+          token Text::Whitespace, m[3]
+          sublex code
+        end
+
+        rule %r/^([ \t]*)(=head\p{Nd}*)(.*)/ do
           groups Text::Whitespace, Comment::Preproc, Generic::Heading
         end
-        rule %r/^(\p{Space}*)(=(?:begin|end|for|finish))([ \t]*)([#{w}]*)/ do
+        rule %r/^([ \t]*)(=(?:begin|for))([ \t]*)([#{w}\-]*)/ do
+          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
+          push :pod_config
+        end
+        rule %r/^([ \t]*)(=(?:end|finish))([ \t]*)([#{w}\-]*)/ do
           groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
         end
-        rule %r/^(\p{Space}*)(=[A-Za-z][#{w}]*)/ do
+        rule %r/^([ \t]*)(=[A-Za-z][#{w}]*)/ do
           groups Text::Whitespace, Comment::Preproc
         end
-        # formatting codes: B<bold>, I<italic>, C<code>, L<link>, ...
-        rule %r/(B)(<)([^<>\n]*)(>)/ do
-          groups Name::Decorator, Punctuation, Generic::Strong, Punctuation
-        end
-        rule %r/(I)(<)([^<>\n]*)(>)/ do
-          groups Name::Decorator, Punctuation, Generic::Emph, Punctuation
-        end
-        rule %r/([CKTV])(<)([^<>\n]*)(>)/ do
-          groups Name::Decorator, Punctuation, Str::Backtick, Punctuation
-        end
-        rule %r/([ALENPRSUXZ])(<)([^<>\n]*)(>)/ do
-          groups Name::Decorator, Punctuation, Comment::Multiline, Punctuation
-        end
-        rule %r/[^\n]+?(?=[A-Z]<|$)/, Comment::Multiline
+        mixin :pod_format_start
+        rule %r/[^\n]+?(?=[A-Z][<«]|$)/, Comment::Multiline
         rule %r/[A-Z]/, Comment::Multiline
         rule %r/\n/, Text::Whitespace
+      end
+
+      # the options of a directive: :kind<Type>, :caption("x"), :!numbered
+      state :pod_config_pairs do
+        rule %r/[ \t]+/, Text::Whitespace
+        rule %r/(:!?)([#{w}\-]+)(<[^>\n]*>|\([^)\n]*\)|\[[^\]\n]*\]|\{[^}\n]*\}|«[^»\n]*»)?/ do
+          groups Punctuation, Name::Attribute, Str
+        end
+      end
+
+      state :pod_config do
+        mixin :pod_config_pairs
+        rule(//) { pop! }
+      end
+
+      # the rest of the line that opens a block
+      state :pod_config_line do
+        mixin :pod_config_pairs
+        rule %r/[^\n]+/, Comment::Multiline
+        rule %r/\n/, Text::Whitespace
+      end
+
+      # formatting codes: B<bold>, I<italic>, C<code>, L<link>, ... with
+      # their other delimiters, C<< a > b >> and C«a > b»
+      state :pod_format_start do
+        rule %r/([A-Z])(<<|<|«)/ do |m|
+          open_pod_format(m[1], m[2])
+        end
+      end
+
+      # The text of a formatting code. The codes nest, and one that is not
+      # closed stops at the end of its paragraph.
+      state :pod_format do
+        rule %r/\n(?=[ \t]*(?:\n|\z|=[A-Za-z]))/ do
+          token Text::Whitespace
+          pop!(@pod_formats.length)
+          @pod_formats.clear
+        end
+        rule %r/\n/, Text::Whitespace
+        mixin :pod_format_start
+        # angle brackets are counted, and so the first ">" does not close
+        # C<%h<key>>; with the other delimiters they are plain text
+        rule %r/</ do
+          closer, text, = @pod_formats.last
+          @pod_formats.last[2] += 1 if closer == '>'
+          token text
+        end
+        rule %r/[>»]/ do |m|
+          bracket = m[0]
+          closer, text, depth = @pod_formats.last
+          if closer == '>' && bracket == '>' && depth.positive?
+            @pod_formats.last[2] -= 1
+            token text, bracket
+          elsif closer == bracket || (closer == '>>' && bracket == '>' && m.scan(/>/))
+            token Punctuation, closer
+            @pod_formats.pop
+            pop!
+          else
+            token text, bracket
+          end
+        end
+        rule %r/[^<>«»\nA-Z]+|[A-Z«]/ do
+          token @pod_formats.last[1]
+        end
       end
 
       # what can appear inside an interpolating string

@@ -1,0 +1,88 @@
+---input---
+=begin pod
+=begin code
+my $x = "a"; # a comment
+=end code
+
+=begin code :lang<shell>
+ls -l "x"
+=end code
+
+=for code
+say 2;
+
+=code say 3;
+
+Text again.
+=end pod
+
+---tokens---
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
+
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'code'        Name.Namespace
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$x'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"a"'         Literal.String.Double
+';'           Punctuation
+' '           Text.Whitespace
+'# a comment' Comment.Single
+'\n'          Text.Whitespace
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'code'        Name.Namespace
+'\n\n'        Text.Whitespace
+
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'code'        Name.Namespace
+' '           Text.Whitespace
+':'           Punctuation
+'lang'        Name.Attribute
+'<shell>'     Literal.String
+'\n'          Text.Whitespace
+
+'ls -l "x"\n' Comment.Multiline
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'code'        Name.Namespace
+'\n\n'        Text.Whitespace
+
+'=for'        Comment.Preproc
+' '           Text.Whitespace
+'code'        Name.Namespace
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n\n'        Text.Whitespace
+
+'=code'       Comment.Preproc
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+';'           Punctuation
+'\n\n'        Text.Whitespace
+
+'Text again.' Comment.Multiline
+'\n'          Text.Whitespace
+
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
