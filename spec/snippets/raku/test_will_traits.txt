@@ -1,0 +1,51 @@
+---input---
+my $x will leave { say 1 } = 2; my $y will begin { };
+$z.will; will => 1;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$x'          Name.Variable
+' '           Text.Whitespace
+'will'        Keyword
+' '           Text.Whitespace
+'leave'       Keyword
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'}'           Punctuation
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$y'          Name.Variable
+' '           Text.Whitespace
+'will'        Keyword
+' '           Text.Whitespace
+'begin'       Keyword
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+'\n'          Text.Whitespace
+
+'$z'          Name.Variable
+'.'           Operator
+'will'        Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'will'        Name
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

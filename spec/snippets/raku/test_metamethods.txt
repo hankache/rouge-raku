@@ -1,0 +1,40 @@
+---input---
+say $x.^shortname, $x.^ver, Foo.^archetypes, $x.^mixin(Bar);
+shortname; ver => 1;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$x'          Name.Variable
+'.^'          Operator
+'shortname'   Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'$x'          Name.Variable
+'.^'          Operator
+'ver'         Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'Foo'         Name
+'.^'          Operator
+'archetypes'  Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'$x'          Name.Variable
+'.^'          Operator
+'mixin'       Name.Builtin
+'('           Punctuation
+'Bar'         Name
+');'          Punctuation
+'\n'          Text.Whitespace
+
+'shortname'   Name
+';'           Punctuation
+' '           Text.Whitespace
+'ver'         Name
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

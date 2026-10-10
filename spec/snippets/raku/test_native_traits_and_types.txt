@@ -1,0 +1,78 @@
+---input---
+has int $.n is nativesize(8); has $.secret is hidden;
+sub f(Str $s is encoded('utf8')) returns void is native { }
+my bool $b; my ulong $u; my ssize_t $n;
+
+---tokens---
+'has'         Keyword.Declaration
+' '           Text.Whitespace
+'int'         Keyword.Type
+' '           Text.Whitespace
+'$.n'         Name.Variable.Instance
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'nativesize'  Keyword
+'('           Punctuation
+'8'           Literal.Number.Integer
+');'          Punctuation
+' '           Text.Whitespace
+'has'         Keyword.Declaration
+' '           Text.Whitespace
+'$.secret'    Name.Variable.Instance
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'hidden'      Keyword
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'f'           Name.Function
+'('           Punctuation
+'Str'         Keyword.Type
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'encoded'     Keyword
+'('           Punctuation
+'\'utf8\''    Literal.String.Single
+'))'          Punctuation
+' '           Text.Whitespace
+'returns'     Keyword
+' '           Text.Whitespace
+'void'        Keyword.Type
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'native'      Keyword
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'bool'        Keyword.Type
+' '           Text.Whitespace
+'$b'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'ulong'       Keyword.Type
+' '           Text.Whitespace
+'$u'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'ssize_t'     Keyword.Type
+' '           Text.Whitespace
+'$n'          Name.Variable
+';'           Punctuation
+'\n'          Text.Whitespace

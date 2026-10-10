@@ -1,0 +1,84 @@
+---input---
+return Empty; say Less, Same, More; $p.status ~~ Kept | Broken | Planned;
+signal(SIGINT, SIGHUP); $h.seek(0, SeekFromBeginning); IterationEnd;
+class Empty { }; Broken::Thing; .Same; Same => 1;
+
+---tokens---
+'return'      Keyword
+' '           Text.Whitespace
+'Empty'       Name.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'Less'        Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'Same'        Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'More'        Name.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'$p'          Name.Variable
+'.'           Operator
+'status'      Name.Builtin
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'Kept'        Name.Constant
+' '           Text.Whitespace
+'|'           Operator
+' '           Text.Whitespace
+'Broken'      Name.Constant
+' '           Text.Whitespace
+'|'           Operator
+' '           Text.Whitespace
+'Planned'     Name.Constant
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'signal'      Name.Builtin
+'('           Punctuation
+'SIGINT'      Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'SIGHUP'      Name.Constant
+');'          Punctuation
+' '           Text.Whitespace
+'$h'          Name.Variable
+'.'           Operator
+'seek'        Name.Builtin
+'('           Punctuation
+'0'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'SeekFromBeginning' Name.Constant
+');'          Punctuation
+' '           Text.Whitespace
+'IterationEnd' Name.Constant
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'class'       Keyword.Declaration
+' '           Text.Whitespace
+'Empty'       Name.Class
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'Broken::Thing' Name
+';'           Punctuation
+' '           Text.Whitespace
+'.'           Operator
+'Same'        Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'Same'        Name
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

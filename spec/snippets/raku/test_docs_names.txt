@@ -81,7 +81,7 @@ only sub f() { }; my $x will leave { say 1 }; dd map { $_ }, list 1, 2; say STAR
 ' '           Text.Whitespace
 'will'        Keyword
 ' '           Text.Whitespace
-'leave'       Name
+'leave'       Keyword
 ' '           Text.Whitespace
 '{'           Punctuation
 ' '           Text.Whitespace

@@ -42,10 +42,15 @@ module Rouge
 
       # names of the traits that can follow "is"
       TRAITS = %w(
-        DEPRECATED assoc built cached copy default dynamic equiv
-        export hidden-from-USAGE hidden-from-backtrace
-        implementation-detail looser native nodal pure raw readonly
-        repr required rw symbol test-assertion tighter
+        assoc built cached copy default DEPRECATED dynamic encoded
+        equiv export hidden hidden-from-backtrace hidden-from-USAGE
+        implementation-detail looser native nativesize nodal pure raw
+        readonly repr required rw symbol test-assertion tighter
+      ).freeze
+
+      # names of the phasers that can follow "will"
+      WILL_TRAITS = %w(
+        begin check end enter first keep leave undo
       ).freeze
 
       # Routines that can be called as a plain word: say "hi", map(...). These
@@ -88,13 +93,14 @@ module Rouge
       # "$x.name", but on its own it is a word the user chose ("name => 1",
       # "sub name"), so these are only builtins after a dot.
       METHODS = %w(
-        abs2rel absolute accept ACCEPTS accessed acquire act action
-        actions add add_attribute add_enum_value add_fallback
-        add_method add_parent add_private_method add_role add_trustee
-        adverb after allocate allof alternative-names annotations
-        antipair antipairs anyof app_lifetime arch archname are args
-        arity ASSIGN-KEY ASSIGN-POS assuming ast at AT-KEY AT-POS
-        attributes auth backtrace base base-repeating basename batch
+        abs2rel absolute accept ACCEPTS accepts_type accessed acquire
+        act action actions add add_attribute add_enum_value
+        add_fallback add_method add_parent add_private_method add_role
+        add_stash add_trustee adverb after allocate allof
+        alternative-names annotations antipair antipairs anyof api
+        app_lifetime arch archetypes archname are args arity
+        ASSIGN-KEY ASSIGN-POS assuming ast at AT-KEY AT-POS attributes
+        auth backtrace base base-repeating base_type basename batch
         before BIND-KEY BIND-POS bind-stderr bind-stdin bind-stdout
         bind-udp bits bless block bool-only bounds break Bridge broken
         BUILD build-date bytecode-size bytes cache CALL-ME
@@ -102,57 +108,67 @@ module Rouge
         caption capture catdir categorize-list catfile catpath cause
         changed child child-name child-typename chunks classify-list
         cleanup clone close-stdin closed code codes collate column
-        command comment compiler compose compose_type composer concise
-        condition config configure_destroy configure_type_checking
-        conj connect constraints construct contains contents count
-        count-only cpu-cores cpu-usage CREATE create_type created cue
-        curdir curupdir d day day-fraction day-of-month day-of-week
+        command comment compiler composalizer compose compose_type
+        compose_values composer compute_mro concise condition config
+        configure_destroy configure_type_checking conj connect
+        constraints construct contains contents count count-only
+        cpu-cores cpu-usage CREATE create_type created cue curdir
+        curupdir d day day-fraction day-of-month day-of-week
         day-of-year daycount days-in-month days-in-year dd-mm-yyyy
-        declaration decode decoder default DEFINITE delayed DELETE-KEY
+        declaration decode decoder default DEFINITE definite delayed
+        delegate_methods_to delegating_methods_to DELETE-KEY
         DELETE-POS denominator desc DESTROY destroyers dev devnull
         devtype did-you-mean dir-sep dir-with-entries dirname
         DISTROnames do does dynamic e eager earlier enclosing encode
         encoder encoding ends-with enum_from_value enum_value_list
         enum_values enums eof err exception excludes-max excludes-min
-        EXISTS-KEY EXISTS-POS exitcode expected extension f feature
-        file filename find_method find_method_qualified finish
-        first-date-in-month flatmap flush fmt format formatter freeze
-        from from-list from-loop from-posix from-slurpy full get_value
-        got grab grabpairs handle handled handles hardware
-        has_accessor headers hh-mm-ss hidden hides hour HOW how hyper
-        id illegal im in in-range in-timezone indent indices infinite
-        infix inode install_method_cache instead int-bounds interval
-        invalid-str invert invocant is-absolute is-hidden
-        is-implementation-detail is-initial-thread is-int is-lazy
-        is-leap-year is-relative is-routine is-setting is-win
-        is_trusted is_type isa isNaN iterator julian-date keep kept
-        KERNELnames key keyof kill kxxv l lang last last-date-in-month
-        later lazy leading level line listen live local lock lookup
-        made make match maxpairs merge message method method_table
-        methods migrate minpairs minus minute misplaced mm-dd-yyyy
-        mode modified modified-julian-date modifier month mro multi
-        multi-invocant multiness my name named named_names narrow
-        native-descriptor new new-from-daycount new-from-pairs
-        new_type next next-handle next-interesting-index nice nl-in
-        nl-out norm nude numerator of offset offset-in-hours
-        offset-in-minutes old on-close on-switch opened operation
-        optional orig os-error osname out out-buffer outer
-        outer-caller-idx package package-kind package-name packages
-        pair pairup parameter params parent parent-name parents parse
+        EXISTS-KEY EXISTS-POS exitcode expected export_callback
+        extension f feature file filename find_method
+        find_method_qualified find_private_method finish
+        first-date-in-month flatmap flush flush_cache fmt format
+        formatter freeze from from-list from-loop from-posix
+        from-slurpy full generate_mixin get_value got grab grabpairs
+        handle handled handles hardware has_accessor headers hh-mm-ss
+        hidden hides hour HOW how hyper id illegal im in in-range
+        in-timezone indent indices infinite infix inode
+        install_method_cache instead int-bounds interval invalid-str
+        invert invocant is-absolute is-hidden is-implementation-detail
+        is-initial-thread is-int is-lazy is-leap-year is-relative
+        is-routine is-setting is-win is_composed is_mixin is_trusted
+        is_type isa isNaN iterator julian-date keep kept KERNELnames
+        key keyof kill kxxv l lang last last-date-in-month later lazy
+        leading level line listen live local lock lookup made make
+        match maxpairs merge message method method_table methods
+        migrate minpairs minus minute misplaced mixin mixin_attribute
+        mm-dd-yyyy mode modified modified-julian-date modifier month
+        mro mro_unhidden multi multi-invocant multiness my name named
+        named_names narrow native-descriptor new new-from-daycount
+        new-from-pairs new_type next next-handle
+        next-interesting-index nice nl-in nl-out nominalize norm nude
+        numerator of offset offset-in-hours offset-in-minutes old
+        on-close on-switch opened operation optional orig os-error
+        osname out out-buffer outer outer-caller-idx package
+        package-kind package-name packages pair pairup parameter
+        parameterize_type params parent parent-name parents parse
         parsefile parts path path-sep payload peer-host peer-port perl
         phaser pickpairs pid placeholder plus polar poll polymod port
         pos positional posix postfix postmatch precomp-ext
-        precomp-target pred prefix prematch print-nl print-to private
-        private_method_table proc protect pull-one push-all
-        push-at-least push-exactly push-until-lazy qualifier-type quit
-        r race radix raku range raw re read readchars readonly ready
-        reallocate reals reason rebless receive recv redispatcher redo
-        rel2abs relative release remove replace-with replacement REPR
-        reserved resolve restore result resume rethrow returns right
-        role roles_to_compose rolish rootdir rotor routine-type rw rwx
-        s schedule-on scheduler scope second seek send serial
-        set-instruments set_hidden set_name set_package set_rw
-        set_value setup_finalization shape share sibling sigil signals
+        precomp-target pred prefix prematch pretend_to_be
+        pretending_to_be print-nl print-to private
+        private_method_names private_method_table private_methods proc
+        protect publish_method_cache pull-one push-all push-at-least
+        push-exactly push-until-lazy qualifier-type quit r race radix
+        raku range raw re read readchars readonly ready reallocate
+        reals reason rebless receive recv redispatcher redo rel2abs
+        relative release remove replace-with replacement REPR reserved
+        resolve restore result resume rethrow returns right role
+        roles_to_compose rolish rootdir rotor routine-type rw rwx s
+        schedule-on scheduler scope second seek send serial
+        set-instruments set_api set_auth set_composalizer
+        set_export_callback set_hidden set_is_mixin
+        set_mixin_attribute set_name set_package set_parameterizer
+        set_rw set_value set_ver set_why setup_finalization
+        setup_mixin_cache shape share shortname sibling sigil signals
         signature sink sink-all skip-at-least skip-at-least-pull-one
         skip-one slice slurp-rest slurpy socket-host socket-port
         source source-package spawn SPEC splitdir splitpath stable
@@ -161,8 +177,9 @@ module Rouge
         suffix summary t tap target target-name tell then throttle
         throw timezone tmpdir to to-posix today toggle total trailing
         trans tree truncated-to trusts try_acquire trying twigil type
-        type_captures typename udp uncaught_handler univals unlock
-        unset unwrap updir usage-name utc value VAR variable
+        type_captures type_check type_parameter_at type_parameterized
+        type_parameters typename udp uncaught_handler univals unlock
+        unset unwrap updir usage-name utc value VAR variable ver
         verbose-config version VMnames volume vow w wait watch
         watch-path week week-number week-year weekday-of-month WHAT
         when WHERE WHEREFORE WHICH WHO whole-second WHY workaround
@@ -224,7 +241,7 @@ module Rouge
         Routine::WrapHandle Sequence Signal
         Telemetry::Instrument::ThreadPool Unicode ValueObjAt array
         blob8 blob16 blob32 blob64 buf8 buf16 buf32 buf64 byte int num
-        str uint
+        str uint bool ssize_t ulong ulonglong utf16 void
       ).freeze
 
       WORD_OPERATORS = %w(
@@ -233,8 +250,15 @@ module Rouge
         orelse R so unicmp x X xor xx Z
       ).freeze
 
+      # terms that stand for a value, and the values of the enumerations
+      # that come with the language
       CONSTANTS = %w(
-        π τ ∞ 𝑒 pi tau Inf NaN e i
+        π τ ∞ 𝑒 pi tau Inf NaN e i BigEndian Broken Empty FileChanged
+        FileRenamed IterationEnd Kept Less LittleEndian More
+        NativeEndian PF_INET PF_INET6 Planned Same SeekFromBeginning
+        SeekFromCurrent SeekFromEnd SIGABRT SIGALRM SIGBREAK SIGBUS
+        SIGHUP SIGINT SIGKILL SIGTERM SIGUSR1 SOCK_DGRAM SOCK_PACKET
+        SOCK_RAW SOCK_RDM SOCK_SEQPACKET SOCK_STREAM
       ).freeze
 
       # symbolic operators, including the Unicode synonyms
@@ -734,6 +758,10 @@ module Rouge
         rule %r/(?<!#{ident_char})#{op_categories}#{op_name_suffix}/, Name::Function
         # traits: is rw, is copy, is export
         rule %r/(?<!#{ident_char})(is)(\p{Space}+)#{word_match.(TRAITS)}/ do
+          groups Keyword, Text::Whitespace, Keyword
+        end
+        # phasers as traits: will leave { ... }
+        rule %r/(?<!#{ident_char})(will)(\p{Space}+)#{word_match.(WILL_TRAITS)}/ do
           groups Keyword, Text::Whitespace, Keyword
         end
         # user-defined types: "is Foo", "of Foo", "--> Foo"
