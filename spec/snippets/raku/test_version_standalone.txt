@@ -1,0 +1,25 @@
+---input---
+say v6.e.PREVIEW, v6.d, v1.2.3+, v1.2.Str, v6.c.say;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'v6.e.PREVIEW' Literal.Number
+','           Punctuation
+' '           Text.Whitespace
+'v6.d'        Literal.Number
+','           Punctuation
+' '           Text.Whitespace
+'v1.2.3+'     Literal.Number
+','           Punctuation
+' '           Text.Whitespace
+'v1.2'        Literal.Number
+'.'           Operator
+'Str'         Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'v6.c'        Literal.Number
+'.'           Operator
+'say'         Name.Builtin
+';'           Punctuation
+'\n'          Text.Whitespace

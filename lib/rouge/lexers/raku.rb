@@ -290,8 +290,13 @@ module Rouge
       # an identifier; a hyphen or apostrophe must be followed by a letter
       ident = "#{nondigit}#{word}*(?:['\\-]#{nondigit}#{word}*)*"
       qualified_ident = "#{ident}(?:::#{ident})*"
+      # A number can start with its decimal point (.5), but not right after
+      # a term: in "foo().5" and "@a[0].5" the dot is not part of a number.
+      # (it looks ahead for the dot first, so as not to look behind at
+      # every character)
+      leading_dot = "(?=\\.)(?<![#{w})\\]}])\\."
       # the operator part of a routine name: infix:<+>, circumfix:«[ ]»
-      op_name_suffix = '(?::(?:sym)?(?:<[^>\n]+>|«[^»\n]+»|' \
+      op_name_suffix = '(?::(?:sym)?(?:<<(?!=>)(?:(?!>>)[^\n;])+>>|<[^>\n]+>|«[^»\n]+»|' \
         '\[(?:"[^"\n]*"|\'[^\'\n]*\'|[^\]\n])+\]))'
       routine_name = "[!^]?#{qualified_ident}#{op_name_suffix}?"
       op_categories = '(?:infix|prefix|postfix|circumfix|postcircumfix|term|trait_mod)'
@@ -305,7 +310,14 @@ module Rouge
       # (atomic and possessive, so that it can not backtrack for ages)
       arguments = '\((?>\'[^\'\n]*\'|"[^"\n]*"|[^()\n]|\([^()\n]*\))*+\)'
       # what can follow a variable in a string: a subscript or a method call
-      postfix = "(?:#{subscript}|\\.[\\^?&]?#{ident}#{arguments})"
+      # A chain of method calls counts as long as it ends in parentheses
+      # ("$x.name.uc()"), and so does a call of the variable ("$f()").
+      postfix = "(?:#{subscript}|#{arguments}|(?:\\.[\\^?&]?#{ident})+#{arguments})"
+      # the rest of an extended identifier: $foo:bar<baz>, $take-me:['home'].
+      # Parentheses only belong to it after a name: &code:(Int) has a
+      # signature.
+      extended = "(?::(?:#{ident})?(?:<[^>\\n]*>|«[^»\\n]*»|\\[[^\\]\\n]*\\]|" \
+        "(?<=[#{w}])\\([^)\\n]*\\)))*"
       # %h<key>, %h<<$key>>, %h«key»; kept to one line so that a stray '<'
       # in code can't swallow what follows it
       angle_subscripts = '(?:<<[^>\n]*>>|<[^>\n]*>|«[^»\n]*»)*'
@@ -329,8 +341,11 @@ module Rouge
       # What can delimit a quote, besides a bracket. Most punctuation
       # could, but in "q.new" and "q = 1" q is a name. An apostrophe in
       # front of a letter is part of an identifier (q'x), unless adverbs
-      # came first (q:to 'END'), which the rule captures as its group 2.
-      quote_delimiter = "(?:[\\/!|\"~^%@`§]|(?(2)'|'(?![\\p{L}_])))"
+      # came first (q:to 'END'), which the rule captures as its group
+      # number +adverbs+.
+      quote_delimiter = lambda do |adverbs|
+        "(?:[\\/!|\"~^%@`§]|(?(#{adverbs})'|'(?![\\p{L}_])))"
+      end
       # Between a quote word and its delimiter, whitespace can only come
       # before a bracket or a slash: in "q ~~ $x" and "m ?? 1 !! 2", q and
       # m are names.
@@ -474,7 +489,7 @@ module Rouge
         if BRACKETS[opener[0]].nil?
           # s/a/b/ : the replacement follows directly, with the same delimiter
           lex_regex_part(stream, opener, replacement, match_variable: true)
-        elsif stream.check(/\p{Space}*#{OPEN_BRACKET}/)
+        elsif stream.check(/\p{Space}*#{OPEN_BRACKET}/o)
           # s{a}{b} : another bracketed group, possibly after whitespace.
           # Otherwise it is s{a} = b, an ordinary assignment.
           token Text::Whitespace, stream.scan(/\p{Space}*/)
@@ -482,6 +497,17 @@ module Rouge
           token Str::Regex, opener
           lex_regex_part(stream, opener, replacement)
         end
+      end
+
+      # Whether what follows the opening "s[" is a substitution, s[a] = 'b',
+      # s[a] += 1 or s[a][b], rather than an index into something called
+      # s: s[0]
+      def substitution_follows?(stream, opener)
+        start = stream.pos
+        _, closing = scan_regex(stream, opener)
+        found = !closing.empty? && stream.match?(/\p{Space}*(?:[-+*\/%~|&^]{0,2}=(?![=>~:])|#{OPEN_BRACKET})/o)
+        stream.pos = start
+        found
       end
 
       # Lexes +text+ on its own, starting in +state+.
@@ -597,7 +623,7 @@ module Rouge
         rule %r/&(?:::)?(#{qualified_ident})/ do |m|
           token builtins.include?(m[1]) ? Name::Builtin : Name::Function
         end
-        rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}|\p{Nd}+)#{angle_subscripts}/, Name::Variable
+        rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}#{extended}|\p{Nd}+)#{angle_subscripts}/, Name::Variable
         rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
         # anonymous variables: "state $ = 0", "$++"
         rule %r/[$@](?=[\p{Space}=;,)\]]|\+\+|--)/, Name::Variable
@@ -619,8 +645,8 @@ module Rouge
         # radix literals: :16<FF>
         rule %r/:\p{Nd}+<[0-9a-z_.]+>/i, Num
         # imaginary numbers
-        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*(?:\.\p{Nd}+(?:_\p{Nd}+)*)?|\.\p{Nd}+(?:_\p{Nd}+)*)(?:e[+-]?\p{Nd}+)?i(?![#{w}'\-])/i, Num::Float
-        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*)?\.\p{Nd}+(?:_\p{Nd}+)*(?:e[+-]?\p{Nd}+)?/i, Num::Float
+        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*(?:\.\p{Nd}+(?:_\p{Nd}+)*)?|#{leading_dot}\p{Nd}+(?:_\p{Nd}+)*)(?:e[+-]?\p{Nd}+)?i(?![#{w}'\-])/i, Num::Float
+        rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*\.|#{leading_dot})\p{Nd}+(?:_\p{Nd}+)*(?:e[+-]?\p{Nd}+)?/i, Num::Float
         rule %r/\p{Nd}+(?:_\p{Nd}+)*e[+-]?\p{Nd}+/i, Num::Float
         rule %r/\p{Nd}+(?:_\p{Nd}+)*/, Num::Integer
         # rational and complex literals: <1/3>, <1+2i>
@@ -646,8 +672,9 @@ module Rouge
         # A bracket can be repeated to make a longer delimiter (q<< >>);
         # other characters can not, so qq|| is an empty string.
         # and heredocs (q:to/END/). Before the keyword and builtin rules,
-        # which would otherwise take q for a word.
-        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|#{quote_delimiter})/ do |m|
+        # which would otherwise take q for a word. With a parenthesis right
+        # after it, q is a routine that is being called: q(1)
+        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|#{quote_delimiter.(2)})/ do |m|
           opening = m[0]
           adverbs = m[2].to_s
           # qq strings (and the :qq / :c adverbs) interpolate
@@ -668,8 +695,8 @@ module Rouge
         end
 
         # --- regexes: m/x/, rx{x}, and with adverbs m:i/x/
-        rule %r/#{quote_start}(?:m|ms|rx)(?:#{adverbs}\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\2*|[^#{w}:\p{Space}=,;)])/ do |m|
-          opener = m[1]
+        rule %r/#{quote_start}(?:m|ms|rx)(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\3*|#{quote_delimiter.(1)})/ do |m|
+          opener = m[2]
           token Str::Regex
           lex_regex_part(m, opener, :regex_body)
         end
@@ -679,8 +706,16 @@ module Rouge
         rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?=\p{Space}*:!?[#{w}])\p{Space}*(?::!?[#{w}\-]+(?:\([^)\n]*\))?\p{Space}*)+((#{OPEN_BRACKET})\3*|[^#{w}:\p{Space}$@%&=,;)])/ do |m|
           lex_substitution(m, m[0], m[1], m[2])
         end
-        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?!!~~)#{before_delimiter}(([{(\[])\3*|([\/|!^~@%])(?!\4))/ do |m|
-          lex_substitution(m, m[0], m[1], m[2])
+        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?!!~~|\()#{before_delimiter}(([{(\[])\3*|([\/|!^~@%])(?!\4))/ do |m|
+          opening, kind, opener = m[0], m[1], m[2]
+          if opener.start_with?('[') && !substitution_follows?(m, opener)
+            # an index into something called s: s[0]
+            token Name, kind
+            token Text::Whitespace, opening[kind.length...-opener.length]
+            token Punctuation, opener
+          else
+            lex_substitution(m, opening, kind, opener)
+          end
         end
         # --- curly and corner quotes: ‘raw’ (or ‚this‘, or ’this‘),
         # “interpolating” (or „this“, or ”this“), ｢no escapes｣
@@ -693,7 +728,8 @@ module Rouge
         rule %r/#{after_dot}#{word_match.(method_builtins)}/, Name::Builtin
         rule %r/#{after_dot}#{ident}/, Name::Function
         # the key of a pair is a plain word, whatever it spells: name => 1
-        rule %r/(?<!#{ident_char})#{qualified_ident}(?=\p{Space}*=>)/, Name
+        # (but Z=> between two terms is the zip operator)
+        rule %r/(?<!#{ident_char})(?![RXZ]=>(?<=\p{Space}...))#{qualified_ident}(?=\p{Space}*=>)/, Name
         # operators used by name: infix:<+>(1, 2)
         rule %r/(?<!#{ident_char})#{op_categories}#{op_name_suffix}/, Name::Function
         # traits: is rw, is copy, is export
@@ -729,6 +765,10 @@ module Rouge
         end
 
         # --- keywords and other reserved words
+        # the label of the loop to leave or to go on with: next OUTER
+        rule %r/#{word_match.(%w(next last redo))}(\p{Space}+)([A-Z][A-Z0-9_]*)(?=\p{Space}*(?:[;}]|if|unless|when|$))/ do
+          groups Keyword, Text::Whitespace, Name::Label
+        end
         rule %r/#{word_match.(DECLARATORS)}/, Keyword::Declaration
         rule %r/#{word_match.(NAMESPACE_KEYWORDS)}/, Keyword::Namespace
         rule %r/#{word_match.(KEYWORDS)}/, Keyword
@@ -736,8 +776,8 @@ module Rouge
         rule %r/#{word_match.(%w(self))}/, Name::Builtin::Pseudo
         rule %r/#{word_match.(CONSTANTS)}/, Name::Constant
         rule %r/[∞∅]/, Name::Constant
-        # version literals: v6.d, v1.2.3, v1.2+
-        rule %r/(?<!#{ident_char})v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]))*\+?(?!#{ident_end})/, Num
+        # version literals: v6.d, v1.2.3, v1.2+, v6.e.PREVIEW
+        rule %r/(?<!#{ident_char})v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]|[A-Z]+)(?!#{ident_end}))*\+?(?!#{ident_end})/, Num
         # meta operators: Z+, X~, R-, Z=>, Rcmp, S!~~, and x=, xx=
         rule %r/#{nw}S(?:!~~|~~|&&|\|\||\^\^|%%|\/\/|==|!=|&(?=\p{Space})|xx?(?![#{w}'\-]))/, Operator
         rule %r/#{nw}[RXZ](?:!~~|\*\*|\/\/|&&|\|\||<=>|=>|==|!=|<=|>=|~~|[-+*\/%~,&|^?<>]|(?:cmp|eq|ne|lt|gt|le|ge|leg|eqv|min|max|div|mod|and|or|xor|x|xx)(?![#{w}'\-]))/, Operator
@@ -991,17 +1031,20 @@ module Rouge
 
       state :ww_guillemets do
         rule %r/»/, Str::Double, :pop!
+        # a word can not start with "#": it starts a comment
+        rule %r/(?<=\p{Space})#.*/, Comment::Single
         mixin :interpolation
-        rule %r/[^»\\$@%&{]+/, Str::Double
-        rule %r/[$@%&\\]/, Str::Double
+        rule %r/[^»\\$@%&{#]+/, Str::Double
+        rule %r/[$@%&\\#]/, Str::Double
       end
 
       state :ww_angles do
         rule %r/>>/, Str::Double, :pop!
+        rule %r/(?<=\p{Space})#.*/, Comment::Single
         mixin :interpolation
-        rule %r/[^>\\$@%&{]+/, Str::Double
+        rule %r/[^>\\$@%&{#]+/, Str::Double
         # (a lone '>' does not close the quote)
-        rule %r/[$@%&\\>]/, Str::Double
+        rule %r/[$@%&\\>#]/, Str::Double
       end
     end
   end

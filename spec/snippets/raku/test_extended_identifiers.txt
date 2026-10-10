@@ -1,0 +1,73 @@
+---input---
+my $foo:bar<baz> = 1; my $foo:bar«$i» = 2; my $take-me:['home'] = 3; say $foo:bar(1+1);
+&code:(Int --> Bool); method m($self: $x) { }; %h<a>:exists; @a[0]:delete;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$foo:bar<baz>' Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$foo:bar«$i»' Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$take-me:[\'home\']' Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$foo:bar(1+1)' Name.Variable
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'&code'       Name.Function
+':('          Punctuation
+'Int'         Keyword.Type
+' '           Text.Whitespace
+'-->'         Operator
+' '           Text.Whitespace
+'Bool'        Keyword.Type
+');'          Punctuation
+' '           Text.Whitespace
+'method'      Keyword.Declaration
+' '           Text.Whitespace
+'m'           Name.Function
+'('           Punctuation
+'$self'       Name.Variable
+':'           Punctuation
+' '           Text.Whitespace
+'$x'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'%h<a>'       Name.Variable
+':'           Punctuation
+'exists'      Name.Attribute
+';'           Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']:'          Punctuation
+'delete'      Name.Attribute
+';'           Punctuation
+'\n'          Text.Whitespace

@@ -1,0 +1,58 @@
+---input---
+FOO: for 1..3 { next FOO; last FOO if $x; redo FOO unless $y }
+next; last unless LAST; next => FOO;
+
+---tokens---
+'FOO'         Name.Label
+':'           Punctuation
+' '           Text.Whitespace
+'for'         Keyword
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+'..'          Operator
+'3'           Literal.Number.Integer
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'next'        Keyword
+' '           Text.Whitespace
+'FOO'         Name.Label
+';'           Punctuation
+' '           Text.Whitespace
+'last'        Keyword
+' '           Text.Whitespace
+'FOO'         Name.Label
+' '           Text.Whitespace
+'if'          Keyword
+' '           Text.Whitespace
+'$x'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'redo'        Keyword
+' '           Text.Whitespace
+'FOO'         Name.Label
+' '           Text.Whitespace
+'unless'      Keyword
+' '           Text.Whitespace
+'$y'          Name.Variable
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'next'        Keyword
+';'           Punctuation
+' '           Text.Whitespace
+'last'        Keyword
+' '           Text.Whitespace
+'unless'      Keyword
+' '           Text.Whitespace
+'LAST'        Keyword
+';'           Punctuation
+' '           Text.Whitespace
+'next'        Name
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'FOO'         Name
+';'           Punctuation
+'\n'          Text.Whitespace

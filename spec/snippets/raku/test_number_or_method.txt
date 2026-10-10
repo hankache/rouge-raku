@@ -1,0 +1,36 @@
+---input---
+say .5, 1.5, .5i; foo(1).5; @a[0].5; $x.5;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'.5'          Literal.Number.Float
+','           Punctuation
+' '           Text.Whitespace
+'1.5'         Literal.Number.Float
+','           Punctuation
+' '           Text.Whitespace
+'.5i'         Literal.Number.Float
+';'           Punctuation
+' '           Text.Whitespace
+'foo'         Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+')'           Punctuation
+'.'           Operator
+'5'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+'.'           Operator
+'5'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'$x'          Name.Variable
+'.'           Operator
+'5'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

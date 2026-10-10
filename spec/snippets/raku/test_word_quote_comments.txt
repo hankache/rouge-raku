@@ -1,0 +1,26 @@
+---input---
+my @a = << a "b c" $d # first
+ e#f >>; say « x # y
+ z »;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'<< a "b c" ' Literal.String.Double
+'$d'          Name.Variable
+' '           Literal.String.Double
+'# first'     Comment.Single
+'\n e#f >>'   Literal.String.Double
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'« x '        Literal.String.Double
+'# y'         Comment.Single
+'\n z »'      Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace

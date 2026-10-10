@@ -1,0 +1,73 @@
+---input---
+say q(1), qq(2), Q(3), qw(a b), m(4), rx(5), s(6), tr(7);
+say q (a b), qw (c d);
+m.foo; rx.new; m-bar();
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q'           Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'qq'          Name.Function
+'('           Punctuation
+'2'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'Q'           Name
+'('           Punctuation
+'3'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'qw'          Name.Function
+'('           Punctuation
+'a'           Name
+' '           Text.Whitespace
+'b'           Name
+'),'          Punctuation
+' '           Text.Whitespace
+'m'           Name.Function
+'('           Punctuation
+'4'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'rx'          Name.Function
+'('           Punctuation
+'5'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'s'           Name.Function
+'('           Punctuation
+'6'           Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'tr'          Name.Function
+'('           Punctuation
+'7'           Literal.Number.Integer
+');'          Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q (a b)'     Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'qw (c d)'    Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'m'           Name
+'.'           Operator
+'foo'         Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'rx'          Name
+'.'           Operator
+'new'         Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'m-bar'       Name.Function
+'();'         Punctuation
+'\n'          Text.Whitespace

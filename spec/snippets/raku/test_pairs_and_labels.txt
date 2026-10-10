@@ -18,7 +18,7 @@ my Int:D $z = 1;
 ' '           Text.Whitespace
 'next'        Keyword
 ' '           Text.Whitespace
-'OUTER'       Name
+'OUTER'       Name.Label
 ' '           Text.Whitespace
 '}'           Punctuation
 '\n'          Text.Whitespace

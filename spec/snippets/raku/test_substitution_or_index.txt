@@ -1,0 +1,68 @@
+---input---
+s[0]; s[0] == 1; s[0] =:= s[1];
+s[a] = 'b'; s[\d] += 5; s[a][b]; s:g[ a ] = 'b'; tr[a][b];
+
+---tokens---
+'s'           Name
+'['           Punctuation
+'0'           Literal.Number.Integer
+'];'          Punctuation
+' '           Text.Whitespace
+'s'           Name
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Text.Whitespace
+'=='          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'s'           Name
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Text.Whitespace
+'=:='         Operator
+' '           Text.Whitespace
+'s'           Name
+'['           Punctuation
+'1'           Literal.Number.Integer
+'];'          Punctuation
+'\n'          Text.Whitespace
+
+'s[a]'        Literal.String.Regex
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'\'b\''       Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'s['          Literal.String.Regex
+'\\d'         Literal.String.Escape
+']'           Literal.String.Regex
+' '           Text.Whitespace
+'+='          Operator
+' '           Text.Whitespace
+'5'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'s[a]['       Literal.String.Regex
+'b'           Literal.String.Double
+']'           Literal.String.Regex
+';'           Punctuation
+' '           Text.Whitespace
+'s:g['        Literal.String.Regex
+' '           Text.Whitespace
+'a'           Literal.String.Regex
+' '           Text.Whitespace
+']'           Literal.String.Regex
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'\'b\''       Literal.String.Single
+';'           Punctuation
+' '           Text.Whitespace
+'tr[a][b]'    Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace

@@ -1,0 +1,48 @@
+---input---
+say "$f() $n(1) $obj.name.uc() $x.a().b.c() $.checksum()";
+say "$file.txt costs $price (USD) @a.sort.join";
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"'           Literal.String.Double
+'$f'          Name.Variable
+'()'          Punctuation
+' '           Literal.String.Double
+'$n'          Name.Variable
+'('           Punctuation
+'1'           Literal.Number.Integer
+')'           Punctuation
+' '           Literal.String.Double
+'$obj'        Name.Variable
+'.'           Operator
+'name'        Name.Builtin
+'.'           Operator
+'uc'          Name.Builtin
+'()'          Punctuation
+' '           Literal.String.Double
+'$x'          Name.Variable
+'.'           Operator
+'a'           Name.Function
+'()'          Punctuation
+'.'           Operator
+'b'           Name.Function
+'.'           Operator
+'c'           Name.Function
+'()'          Punctuation
+' '           Literal.String.Double
+'$.checksum'  Name.Variable.Instance
+'()'          Punctuation
+'"'           Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"'           Literal.String.Double
+'$file'       Name.Variable
+'.txt costs ' Literal.String.Double
+'$price'      Name.Variable
+' (USD) @a.sort.join"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace

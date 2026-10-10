@@ -74,7 +74,14 @@ say "quotes: @a.join(', ') @a.join('(') @a.join(")") and it's (fine)";
 '()['         Punctuation
 '0'           Literal.Number.Integer
 ']'           Punctuation
-' @a.sort.join()"' Literal.String.Double
+' '           Literal.String.Double
+'@a'          Name.Variable
+'.'           Operator
+'sort'        Name.Builtin
+'.'           Operator
+'join'        Name.Builtin
+'()'          Punctuation
+'"'           Literal.String.Double
 ';'           Punctuation
 '\n'          Text.Whitespace
 

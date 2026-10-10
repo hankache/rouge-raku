@@ -1,0 +1,46 @@
+---input---
+my %h = @a Z=> @b; { 1 R=> "a" };
+(c=>True,X=>False); Z => 1;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'%h'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'Z=>'         Operator
+' '           Text.Whitespace
+'@b'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'R=>'         Operator
+' '           Text.Whitespace
+'"a"'         Literal.String.Double
+' '           Text.Whitespace
+'};'          Punctuation
+'\n'          Text.Whitespace
+
+'('           Punctuation
+'c'           Name
+'=>'          Operator
+'True'        Keyword.Constant
+','           Punctuation
+'X'           Name
+'=>'          Operator
+'False'       Keyword.Constant
+');'          Punctuation
+' '           Text.Whitespace
+'Z'           Name
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

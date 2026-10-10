@@ -1,0 +1,43 @@
+---input---
+multi infix:<< < >>($a, $b) { }; &infix:<<(>)>>; sub infix:<<=>($a) { }; sub infix:<<"\x2286">>($a) { }
+
+---tokens---
+'multi'       Keyword.Declaration
+' '           Text.Whitespace
+'infix:<< < >>' Name.Function
+'('           Punctuation
+'$a'          Name.Variable
+','           Punctuation
+' '           Text.Whitespace
+'$b'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'&infix:<<(>)>>' Name.Function
+';'           Punctuation
+' '           Text.Whitespace
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'infix:<<=>'  Name.Function
+'('           Punctuation
+'$a'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'};'          Punctuation
+' '           Text.Whitespace
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'infix:<<"\\x2286">>' Name.Function
+'('           Punctuation
+'$a'          Name.Variable
+')'           Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
