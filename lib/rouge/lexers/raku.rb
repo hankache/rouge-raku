@@ -757,6 +757,8 @@ module Rouge
           token Comment::Multiline, opening + scan_delimited(m, m[1]).join
         end
         rule %r/#[|=].*/, Comment::Special
+        # the first line of a script: #!/usr/bin/env raku
+        rule %r/\A#!.*/, Comment::Hashbang
         rule %r/#.*/, Comment::Single
 
         # --- variables. Nothing else starts with a sigil either.

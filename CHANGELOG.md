@@ -31,6 +31,7 @@
   metamodel, three more traits, the phasers that can follow `will`, and the
   values of the enumerations that come with the language (`Less`, `Empty`,
   `SIGINT`, ...).
+- The `#!` line that starts a script is a hashbang comment.
 - Pod: code blocks are lexed as Raku unless they name another language
   (`:lang<shell>`), and the other verbatim blocks are plain text.
   Formatting codes can use `<< >>` and `« »`, nest and span lines. The

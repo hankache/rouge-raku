@@ -1,0 +1,19 @@
+---input---
+#!/usr/bin/env raku
+say 1; #!not the first line
+#!nor this
+
+---tokens---
+'#!/usr/bin/env raku' Comment.Hashbang
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'#!not the first line' Comment.Single
+'\n'          Text.Whitespace
+
+'#!nor this'  Comment.Single
+'\n'          Text.Whitespace
