@@ -1,0 +1,46 @@
+---input---
+say "[$name] @mixed>>.gist() and @a».uc() and @b>>.elems";
+say "@array.[] %h«a» @releases».<tag> $x.[0] $file.txt";
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"['          Literal.String.Double
+'$name'       Name.Variable
+'] '          Literal.String.Double
+'@mixed'      Name.Variable
+'>>.'         Operator
+'gist'        Name.Builtin
+'()'          Punctuation
+' and '       Literal.String.Double
+'@a'          Name.Variable
+'».'          Operator
+'uc'          Name.Builtin
+'()'          Punctuation
+' and @b>>.elems"' Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'"'           Literal.String.Double
+'@array'      Name.Variable
+'.'           Operator
+'[]'          Punctuation
+' '           Literal.String.Double
+'%h«a»'       Name.Variable
+' '           Literal.String.Double
+'@releases'   Name.Variable
+'».'          Operator
+'<tag>'       Literal.String
+' '           Literal.String.Double
+'$x'          Name.Variable
+'.'           Operator
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Literal.String.Double
+'$file'       Name.Variable
+'.txt"'       Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace

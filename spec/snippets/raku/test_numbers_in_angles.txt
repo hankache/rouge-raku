@@ -1,0 +1,26 @@
+---input---
+<NaN+0i> cmp <0+0i>; <0x01/0x02>; <0b01/0b10>; <3.8e0+0i>; <5+0i >; <a b>;
+
+---tokens---
+'<NaN+0i>'    Literal.Number
+' '           Text.Whitespace
+'cmp'         Operator.Word
+' '           Text.Whitespace
+'<0+0i>'      Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'<0x01/0x02>' Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'<0b01/0b10>' Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'<3.8e0+0i>'  Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'<5+0i >'     Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'<a b>'       Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace

@@ -1,0 +1,54 @@
+---input---
+$_%%3 || $_%%5; (1|2|3) => 1&2&3; 13%7%4; say $0 ~ @0; %h; &foo;
+
+---tokens---
+'$_'          Name.Variable
+'%%'          Operator
+'3'           Literal.Number.Integer
+' '           Text.Whitespace
+'||'          Operator
+' '           Text.Whitespace
+'$_'          Name.Variable
+'%%'          Operator
+'5'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'('           Punctuation
+'1'           Literal.Number.Integer
+'|'           Operator
+'2'           Literal.Number.Integer
+'|'           Operator
+'3'           Literal.Number.Integer
+')'           Punctuation
+' '           Text.Whitespace
+'=>'          Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+'&'           Operator
+'2'           Literal.Number.Integer
+'&'           Operator
+'3'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'13'          Literal.Number.Integer
+'%'           Operator
+'7'           Literal.Number.Integer
+'%'           Operator
+'4'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$0'          Name.Variable
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'@0'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'%h'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'&foo'        Name.Function
+';'           Punctuation
+'\n'          Text.Whitespace

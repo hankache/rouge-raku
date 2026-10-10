@@ -1,0 +1,22 @@
+---input---
+my $today:foo<a b>:bar:baz<x> = 1; my $t:foo['e','f']:bar:baz['x'] = 2;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$today:foo<a b>:bar:baz<x>' Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$t:foo[\'e\',\'f\']:bar:baz[\'x\']' Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

@@ -1,0 +1,52 @@
+---input---
+(@v »⋅« @v)».sqrt; (@v >>⋅<< @v)>>.abs; @a >>×<< @b; is 4 R[/] 5, 5 / 4;
+
+---tokens---
+'('           Punctuation
+'@v'          Name.Variable
+' '           Text.Whitespace
+'»⋅«'         Operator
+' '           Text.Whitespace
+'@v'          Name.Variable
+')'           Punctuation
+'».'          Operator
+'sqrt'        Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'('           Punctuation
+'@v'          Name.Variable
+' '           Text.Whitespace
+'>>⋅<<'       Operator
+' '           Text.Whitespace
+'@v'          Name.Variable
+')'           Punctuation
+'>>.'         Operator
+'abs'         Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'>>×<<'       Operator
+' '           Text.Whitespace
+'@b'          Name.Variable
+';'           Punctuation
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'4'           Literal.Number.Integer
+' '           Text.Whitespace
+'R'           Operator.Word
+'['           Punctuation
+'/'           Operator
+']'           Punctuation
+' '           Text.Whitespace
+'5'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'5'           Literal.Number.Integer
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'4'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

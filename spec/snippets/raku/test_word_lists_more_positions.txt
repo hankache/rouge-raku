@@ -1,0 +1,63 @@
+---input---
+is ~<a b c>.pairs, +<5 7 8>; my $e = enum < ook! ook. ook? >;
+f(:greet<Hello> :person«$user»); f(:p<<$user x>>); @exp[$i]<>; $a +< 2;
+
+---tokens---
+'is'          Keyword
+' '           Text.Whitespace
+'~'           Operator
+'<a b c>'     Literal.String
+'.'           Operator
+'pairs'       Name.Builtin
+','           Punctuation
+' '           Text.Whitespace
+'+'           Operator
+'<5 7 8>'     Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$e'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'enum'        Keyword.Declaration
+' '           Text.Whitespace
+'< ook! ook. ook? >' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'f'           Name.Function
+'(:'          Punctuation
+'greet'       Name.Attribute
+'<Hello>'     Literal.String
+' '           Text.Whitespace
+':'           Punctuation
+'person'      Name.Attribute
+'«'           Literal.String.Double
+'$user'       Name.Variable
+'»'           Literal.String.Double
+');'          Punctuation
+' '           Text.Whitespace
+'f'           Name.Function
+'(:'          Punctuation
+'p'           Name.Attribute
+'<<'          Literal.String.Double
+'$user'       Name.Variable
+' x>>'        Literal.String.Double
+');'          Punctuation
+' '           Text.Whitespace
+'@exp'        Name.Variable
+'['           Punctuation
+'$i'          Name.Variable
+']'           Punctuation
+'<>'          Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'$a'          Name.Variable
+' '           Text.Whitespace
+'+<'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

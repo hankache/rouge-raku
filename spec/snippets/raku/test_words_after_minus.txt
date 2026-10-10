@@ -1,0 +1,77 @@
+---input---
+is log(-Inf), NaN; my $r = -Inf..Inf; say -pi, -self, -Int, 5 - e;
+my-if; foo-Int; don't-if; -17..^Inf; is Inf / Inf, NaN;
+
+---tokens---
+'is'          Keyword
+' '           Text.Whitespace
+'log'         Name.Builtin
+'('           Punctuation
+'-'           Operator
+'Inf'         Name.Constant
+'),'          Punctuation
+' '           Text.Whitespace
+'NaN'         Name.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$r'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'-'           Operator
+'Inf'         Name.Constant
+'..'          Operator
+'Inf'         Name.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'-'           Operator
+'pi'          Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'-'           Operator
+'self'        Name.Builtin.Pseudo
+','           Punctuation
+' '           Text.Whitespace
+'-'           Operator
+'Int'         Keyword.Type
+','           Punctuation
+' '           Text.Whitespace
+'5'           Literal.Number.Integer
+' '           Text.Whitespace
+'-'           Operator
+' '           Text.Whitespace
+'e'           Name.Constant
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'my-if'       Name
+';'           Punctuation
+' '           Text.Whitespace
+'foo-Int'     Name
+';'           Punctuation
+' '           Text.Whitespace
+'don\'t-if'   Name
+';'           Punctuation
+' '           Text.Whitespace
+'-'           Operator
+'17'          Literal.Number.Integer
+'..^'         Operator
+'Inf'         Name.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'is'          Keyword
+' '           Text.Whitespace
+'Inf'         Name.Constant
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'Inf'         Name.Constant
+','           Punctuation
+' '           Text.Whitespace
+'NaN'         Name.Constant
+';'           Punctuation
+'\n'          Text.Whitespace

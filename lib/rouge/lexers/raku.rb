@@ -310,8 +310,11 @@ module Rouge
       sup = '²³¹⁰-⁻'
       word = "[#{w}&&[^#{sup}]]"
       nondigit = "[\\p{L}\\p{No}\\p{Nl}_&&[^#{sup}]]"
-      # one identifier character, for lookbehinds
-      ident_char = "[#{w}'\\-:&&[^#{sup}]]"
+      # Not in the middle of a longer word: after a word character or a
+      # colon, or after the hyphen or apostrophe that joins two parts of
+      # an identifier (my-if, don't). A minus sign on its own is not one:
+      # -Inf
+      not_in_word = "(?<![#{w}:&&[^#{sup}]]|[#{w}&&[^#{sup}]]['\\-])"
       # What may follow a word for it to still be part of a longer
       # identifier. A single colon does not continue an identifier
       # ("@a.push: 1", "Blob:D:"), and neither does a hyphen that is not
@@ -328,6 +331,8 @@ module Rouge
       # (it looks ahead for the dot first, so as not to look behind at
       # every character)
       leading_dot = "(?=\\.)(?<![#{w})\\]}])\\."
+      # one part of a complex number in angle brackets: <1.5e0+Inf\i>
+      angle_number = '(?:\p{Nd}+(?:\.\p{Nd}+)?(?:e[-+]?\p{Nd}+)?|\.\p{Nd}+|NaN|Inf)'
       # the operator part of a routine name: infix:<+>, circumfix:«[ ]»
       op_name_suffix = '(?::(?:sym)?(?:<<(?!=>)(?:(?!>>)[^\n;])+>>|<[^>\n]+>|«[^»\n]+»|' \
         '\[(?:"[^"\n]*"|\'[^\'\n]*\'|[^\]\n])+\]))'
@@ -336,20 +341,21 @@ module Rouge
       type_name = "[A-Z]#{word}*(?:['\\-]#{nondigit}#{word}*)*(?:::#{ident})*"
       # type smileys: Int:D, Foo:U, Any:_
       smiley = "(?::[UD_](?![#{w}'\\-]))"
-      after_dot = '(?:(?<=\.)(?<!\.\.)|(?<=\.[\^?&+*]))'
-      subscript = '(?:\[[^\]\n]*\]|\{[^}\n]*\}|<[^>\n]*>)'
+      after_dot = '(?:(?<=\.)(?<!\.\.)|(?<=\.[\^?&+*])(?<!\.\.[\^?&+*]))'
+      subscript = '(?:(?:>>|»)?\.)?(?:\[[^\]\n]*\]|\{[^}\n]*\}|<[^>\n]*>|«[^»\n]*»)'
       # the arguments of a call, with one level of nested parentheses;
       # a parenthesis in a quoted string does not count
       # (atomic and possessive, so that it can not backtrack for ages)
       arguments = '\((?>\'[^\'\n]*\'|"[^"\n]*"|[^()\n]|\([^()\n]*\))*+\)'
       # what can follow a variable in a string: a subscript or a method call
       # A chain of method calls counts as long as it ends in parentheses
-      # ("$x.name.uc()"), and so does a call of the variable ("$f()").
-      postfix = "(?:#{subscript}|#{arguments}|(?:\\.[\\^?&]?#{ident})+#{arguments})"
-      # the rest of an extended identifier: $foo:bar<baz>, $take-me:['home'].
-      # Parentheses only belong to it after a name: &code:(Int) has a
-      # signature.
-      extended = "(?::(?:#{ident})?(?:<[^>\\n]*>|«[^»\\n]*»|\\[[^\\]\\n]*\\]|" \
+      # ("$x.name.uc()", "@a>>.gist()"), and so does a call of the
+      # variable ("$f()").
+      postfix = "(?:#{subscript}|#{arguments}|(?:(?:>>|»)?\\.[\\^?&]?#{ident})+#{arguments})"
+      # the rest of an extended identifier: $foo:bar<baz>, $take-me:['home'],
+      # $a:b<c>:d:e<f>. Parentheses only belong to it after a name:
+      # &code:(Int) has a signature.
+      extended = "(?:(?::#{ident})*:(?:#{ident})?(?:<[^>\\n]*>|«[^»\\n]*»|\\[[^\\]\\n]*\\]|" \
         "(?<=[#{w}])\\([^)\\n]*\\)))*"
       # %h<key>, %h<<$key>>, %h«key»; kept to one line so that a stray '<'
       # in code can't swallow what follows it
@@ -360,9 +366,9 @@ module Rouge
       regex_words = %w(
         say put print when if elsif unless while until given with without
         and or not so return grep map first split comb match subst
-        contains ff fff xor andthen orelse
+        contains ff fff xor andthen orelse where handles
       )
-      regex_position = "(?=\\p{Space}*\\/)(?:(?<=[=(,{\\[;:!~|&?])|(?<==>)|" \
+      regex_position = "(?=\\p{Space}*\\/)(?:(?<=[=(,{\\[;:!~|&?^…])|(?<==>)|(?<=\\.\\.\\.)|" \
         "#{regex_words.map { |x| "(?<=\\b#{x} )" }.join('|')})"
       open_brackets = Regexp.escape(BRACKETS.keys.join)
 
@@ -371,6 +377,8 @@ module Rouge
       quote_start = "(?<![#{w}'\\-.])"
       # the adverbs of a quote: q:to, qq:!c, m:i:g
       adverbs = "(?:\\p{Space}*:!?[#{w}]+)+"
+      # ... and of a regex, which can have arguments: m:nth(2)
+      regex_adverbs = "(?:\\p{Space}*:!?[#{w}]+(?:\\([^)\\n]*\\))?)+"
       # What can delimit a quote, besides a bracket. Most punctuation
       # could, but in "q.new" and "q = 1" q is a name. An apostrophe in
       # front of a letter is part of an identifier (q'x), unless adverbs
@@ -384,7 +392,7 @@ module Rouge
       # m are names.
       before_delimiter = "(?:\\p{Space}*(?=[#{open_brackets}\\/])|)"
       # where a "<" starts a word list rather than being a comparison
-      term_position = "(?=\\p{Space}*<)(?:(?<=[=(,\\[])|(?<=\\bfor ))"
+      term_position = "(?=\\p{Space}*<)(?:(?<=[=(,\\[])|(?<=\\bfor )|(?<=\\benum )|(?<=:: ))"
       # "token", "rule" and "regex" are ordinary words in "$x.rule",
       # "rule => 1" or "/regex/"
       not_a_regex_declarator = "(?<![#{w}'.:$@%&\\/<\\-])"
@@ -410,11 +418,11 @@ module Rouge
       end
 
       word_match = lambda do |words, suffix = ''|
-        "(?<!#{ident_char})(#{any_of.(words)})" \
+        "#{not_in_word}(#{any_of.(words)})" \
           "#{suffix}(?!#{ident_end})"
       end
 
-      not_a_builtin_type = "(?!(?:#{any_of.(BUILTIN_CLASSES)}|True|False|Nil)" \
+      not_a_builtin_type = "(?!(?:#{any_of.(BUILTIN_CLASSES)}|True|False|Nil|Inf|NaN)" \
         "#{smiley}?(?!#{ident_end}))"
       # After a dot every builtin routine is a builtin, and so is the name
       # of a type: "$x.Int" calls the coercion method, it does not name
@@ -524,11 +532,25 @@ module Rouge
         token Str::Regex, closing
       end
 
+      # Lexes what opens a regex: its +word+ (m, rx, s), its adverbs, if
+      # it has any, and its +opener+. Adverbs that have arguments are
+      # lexed as code, for the sake of the arguments: m:nth(2)/x/
+      def lex_regex_opening(opening, word, opener)
+        adverbs = opening[word.length...opening.length - opener.length]
+        return token(Str::Regex, opening) unless adverbs.include?('(')
+
+        token Str::Regex, word
+        sublex adverbs
+        # (a copy, as Rouge appends the tokens that follow to this string,
+        # and the opener is still needed to find where the regex ends)
+        token Str::Regex, opener.dup
+      end
+
       # s/pattern/replacement/, s{pattern}{replacement}, tr/from/to/, ...
       def lex_substitution(stream, opening, kind, opener)
         transliteration = kind.downcase == 'tr'
 
-        token Str::Regex, opening
+        lex_regex_opening(opening, kind, opener)
         lex_regex_part(stream, opener, transliteration ? nil : :regex_body)
 
         replacement = transliteration ? nil : :interpolated
@@ -672,6 +694,10 @@ module Rouge
         found
       end
 
+      # The rules are built the first time their state is used, and their
+      # blocks can see the patterns above. A block that assigned to one of
+      # those names would change the rules that are built after it runs.
+      #
       # If you're modifying these rules, be careful if you need to process
       # '{' or '}' characters. Code can be nested in strings, and the
       # :embedded state counts braces to know where that code ends, so if
@@ -681,14 +707,16 @@ module Rouge
         # rules after them skip.
         # Pod: everything after =finish, a delimited block (=begin pod ...
         # =end pod), or a paragraph or abbreviated block, which ends at the
-        # first blank line
-        rule %r/^=finish\b.*|^(\p{Space}*)=begin\p{Space}+([#{w}]+)\b.*?^\1=end\p{Space}+\2|^\p{Space}*=for.*?\n\p{Space}*?\n|^=.*?\n\p{Space}*?\n/m do |m|
+        # first blank line or with the file. A delimited block can be
+        # indented, and so can a paragraph; an abbreviated one can not, as
+        # a line of code may well start with "=".
+        rule %r/^=finish\b.*|^([ \t]*)=begin\p{Space}+([#{w}]+)\b.*?^\1=end\p{Space}+\2|^[ \t]*=for\b.*?(?:\n\p{Space}*?\n|\z)|^=[A-Za-z].*?(?:\n\p{Space}*?\n|\z)/m do |m|
           sublex m[0], :pod_body
         end
         # a regex without m or rx: $s ~~ /x/, .subst(/x/, ''), say /x/
         # It has to end on the line it starts on, as the "/" may be a
         # division after all, except after a smartmatch, where it can not.
-        rule %r/#{regex_position}(\p{Space}*)(\/)(?!\/)(?:(?<=~~\/|~~\p{Space}\/)|(?=(?:\\[\s\S]|[^\/\\\n])*\/))/ do |m|
+        rule %r/#{regex_position}(\p{Space}*)(\/)(?![\/\]])(?:(?<=~~\/|~~\p{Space}\/)|(?=(?:\\[\s\S]|[^\/\\\n])*\/))/ do |m|
           opener = m[2]
           groups Text::Whitespace, Str::Regex
           lex_regex_part(m, opener, :regex_body)
@@ -704,7 +732,9 @@ module Rouge
         # --- whitespace and punctuation. No rule below starts with either,
         # and they are the most common tokens, so they are not made to
         # wait for all the other rules to fail first.
-        rule %r/\p{Space}+/, Text::Whitespace
+        # (whitespace stops at the start of a line that opens a Pod block,
+        # for the rule above to see the block from there)
+        rule %r/\p{Space}*\n(?=[ \t]+=(?:begin|for)\p{Space})|\p{Space}+/, Text::Whitespace
         rule %r/[;,()\]]/, Punctuation
 
         # --- comments
@@ -728,7 +758,7 @@ module Rouge
         rule %r/&(?:::)?(#{qualified_ident})/ do |m|
           token builtins.include?(m[1]) ? Name::Builtin : Name::Function
         end
-        rule %r/[$@%&][\^:~]?(?:::)?(?:#{qualified_ident}#{extended}|\p{Nd}+)#{angle_subscripts}/, Name::Variable
+        rule %r/(?:[$@%&][\^:~]?(?:::)?#{qualified_ident}#{extended}|[$@]\p{Nd}+)#{angle_subscripts}/, Name::Variable
         rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
         # anonymous variables: "state $ = 0", "$++"
         rule %r/[$@](?=[\p{Space}=;,)\]]|\+\+|--)/, Name::Variable
@@ -756,9 +786,9 @@ module Rouge
         rule %r/\p{Nd}+(?:_\p{Nd}+)*/, Num::Integer
         # the other characters that are numbers: ⅒, ½, Ⅷ
         rule %r/[\p{No}\p{Nl}&&[^#{sup}]]/, Num
-        # rational and complex literals: <1/3>, <1+2i>
-        rule %r/<[-+]?\p{Nd}+\/\p{Nd}+>/, Num
-        rule %r/<[-+]?[\p{Nd}.]+[-+][\p{Nd}.]+i>/, Num
+        # rational and complex literals: <1/3>, <0x01/0x02>, <1+2i>, <NaN+0i>
+        rule %r/<[-+]?(?:0[xob][0-9A-Fa-f]+|\p{Nd}+)\/(?:0[xob][0-9A-Fa-f]+|\p{Nd}+)[ \t]*>/, Num
+        rule %r/<[-+]?#{angle_number}[-+]#{angle_number}\\?i[ \t]*>/, Num
 
         # --- regex declarations, only when a name or a block follows
         rule %r/#{not_a_regex_declarator}(regex|token|rule)(\p{Space}+)(#{ident}:sym)/ do
@@ -783,14 +813,16 @@ module Rouge
         # after it, q is a routine that is being called: q(1)
         rule %r/#{quote_start}(qq|q|Q)(ww|[a-zA-Z])?(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\5*|#{quote_delimiter.(3)})/ do |m|
           opening = m[0]
-          adverbs = m[3].to_s
+          # (not called "adverbs": that is the pattern above, which the
+          # rules that are built later still need)
+          given = m[3].to_s
           # qq strings interpolate, and so do the others as far as their
           # adverbs say: q:s/$scalars only/, Qc/{closures} only/
-          interpolations = interpolations_of(m[1], m[2], adverbs)
+          interpolations = interpolations_of(m[1], m[2], given)
           # nothing is special in Q, not even a backslash: Q/\/
           body, closing = scan_delimited(m, m[4], escapes: m[1] != 'Q')
 
-          if adverbs.match?(HEREDOC_ADVERB)
+          if given.match?(HEREDOC_ADVERB)
             token Str, opening + body + closing
             lex_heredocs(m, body, interpolations)
           elsif interpolations.empty?
@@ -803,9 +835,9 @@ module Rouge
         end
 
         # --- regexes: m/x/, rx{x}, and with adverbs m:i/x/
-        rule %r/#{quote_start}(?:m|ms|rx)(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\3*|#{quote_delimiter.(1)})/ do |m|
-          opener = m[2]
-          token Str::Regex
+        rule %r/#{quote_start}(ms|m|rx)(?!\()(?:(#{regex_adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|#{quote_delimiter.(2)})/ do |m|
+          opener = m[3]
+          lex_regex_opening(m[0], m[1], opener)
           lex_regex_part(m, opener, :regex_body)
         end
         # substitution and transliteration: s/a/b/, S{a}{b}, s:2nd/a/b/, tr/a-z/A-Z/
@@ -837,19 +869,19 @@ module Rouge
         rule %r/#{after_dot}#{ident}/, Name::Function
         # the key of a pair is a plain word, whatever it spells: name => 1
         # (but Z=> between two terms is the zip operator)
-        rule %r/(?<!#{ident_char})(?![RXZ]=>(?<=\p{Space}...))#{qualified_ident}(?=\p{Space}*=>)/, Name
+        rule %r/#{not_in_word}(?![RXZ]=>(?<=\p{Space}...))#{qualified_ident}(?=\p{Space}*=>)/, Name
         # operators used by name: infix:<+>(1, 2)
-        rule %r/(?<!#{ident_char})#{op_categories}#{op_name_suffix}/, Name::Function
+        rule %r/#{not_in_word}#{op_categories}#{op_name_suffix}/, Name::Function
         # traits: is rw, is copy, is export
-        rule %r/(?<!#{ident_char})(is)(\p{Space}+)#{word_match.(TRAITS)}/ do
+        rule %r/#{not_in_word}(is)(\p{Space}+)#{word_match.(TRAITS)}/ do
           groups Keyword, Text::Whitespace, Keyword
         end
         # phasers as traits: will leave { ... }
-        rule %r/(?<!#{ident_char})(will)(\p{Space}+)#{word_match.(WILL_TRAITS)}/ do
+        rule %r/#{not_in_word}(will)(\p{Space}+)#{word_match.(WILL_TRAITS)}/ do
           groups Keyword, Text::Whitespace, Keyword
         end
         # user-defined types: "is Foo", "of Foo", "--> Foo"
-        rule %r/(?<!#{ident_char})(is|does|of|returns|handles|trusts|hides)(\p{Space}+)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
+        rule %r/#{not_in_word}(is|does|of|returns|handles|trusts|hides)(\p{Space}+)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
           groups Keyword, Text::Whitespace, Name::Class
         end
         rule %r/(-->)(\p{Space}*)#{not_a_builtin_type}(#{type_name}#{smiley}?)(?!#{ident_end})/ do
@@ -889,7 +921,7 @@ module Rouge
         rule %r/#{word_match.(CONSTANTS)}/, Name::Constant
         rule %r/[∞∅]/, Name::Constant
         # version literals: v6.d, v1.2.3, v1.2+, v6.e.PREVIEW
-        rule %r/(?<!#{ident_char})v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]|[A-Z]+)(?!#{ident_end}))*\+?(?!#{ident_end})/, Num
+        rule %r/#{not_in_word}v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]|[A-Z]+)(?!#{ident_end}))*\+?(?!#{ident_end})/, Num
         # meta operators: Z+, X~, R-, Z=>, Rcmp, S!~~, and x=, xx=
         rule %r/#{nw}S(?:!~~|~~|&&|\|\||\^\^|%%|\/\/|==|!=|&(?=\p{Space})|xx?(?![#{w}'\-]))/, Operator
         rule %r/#{nw}[RXZ](?:!~~|\*\*|\/\/|&&|\|\||<=>|=>|==|!=|<=|>=|~~|[-+*\/%~,&|^?<>]|(?:cmp|eq|ne|lt|gt|le|ge|leg|eqv|min|max|div|mod|and|or|xor|x|xx)(?![#{w}'\-]))/, Operator
@@ -902,13 +934,13 @@ module Rouge
         rule %r/#{word_match.(BUILTIN_CLASSES, "#{smiley}?")}/, Keyword::Type
         rule %r/#{word_match.(BUILTINS)}/, Name::Builtin
         # a user-defined type: with a smiley, or constraining a variable
-        rule %r/(?<!#{ident_char})#{type_name}#{smiley}/, Name::Class
-        rule %r/(?<!#{ident_char})#{type_name}(?=\p{Space}+[$@%&\\])/, Name::Class
+        rule %r/#{not_in_word}#{type_name}#{smiley}/, Name::Class
+        rule %r/#{not_in_word}#{type_name}(?=\p{Space}+[$@%&\\])/, Name::Class
         rule %r/(?<=[#{w}>])#{smiley}/, Keyword::Type
 
         # --- operators that could be mistaken for quotes
-        # hyper operators: »+«, >>+<<, +« (prefix), »++ and ».say (postfix)
-        rule %r/(?:«|»|<<|>>)[-+*\/%~=!&|^?<>]+(?:«|»|<<|>>)/, Operator
+        # hyper operators: »+«, >>+<<, »⋅«, +« (prefix), »++ and ».say (postfix)
+        rule %r/(?:«|»|<<|>>)[-+*\/%~=!&|^?<>\p{Sm}]+(?:«|»|<<|>>)/, Operator
         rule %r/[-+*\/%~!?|^]+«/, Operator
         # an ASCII prefix hyper, when its operand follows: -<< (3, 2, 1)
         rule %r/[-+~!?|^]<<(?=\p{Space}*[$@%(\[<])/, Operator
@@ -918,6 +950,10 @@ module Rouge
         rule %r/(?:»|>>)(?=\.[#{w}^?!(]|\+\+|--|[\[{<(])/, Operator
         # reduction operators: [+], [\*], [<=], [max], [Z+]
         rule %r/(?<![#{w}\])}>'\-])\[\\?(?:[RXZ]?[-+*\/%~=<>!&|^?,]+|[RXZ]?(?:min|max|gcd|lcm|and|or|xor|x|xx|cmp|eq|ne|lt|gt|le|ge|leg|eqv))\]/, Operator
+        # a prefix operator in front of a word list: ~<a b c>
+        rule %r/[~+?](?=<[^\p{Space}=<>{};()][^<>{};()\n]*>)/, Operator
+        # the empty subscript: @a[0]<>
+        rule %r/<>(?<=[#{w}\])}]<>)/, Str
         # quote-like words with interpolation: «a $b» and <<a $b>>. After
         # an operator or a term these are hyper operators, not quotes,
         # and so they are in [«] and [<<], which name an operator.
@@ -929,6 +965,11 @@ module Rouge
         # loop labels: OUTER: for ...
         rule %r/#{nw}([A-Z][A-Z0-9_]*)(:)(?=\p{Space}*(?:for|while|until|loop|repeat|given|if|unless|do|\{|$))/ do
           groups Name::Label, Punctuation
+        end
+        # a colon-pair with interpolating words for its value: :name«$x»
+        rule %r/(:!?)(#{ident})(«|<<(?![<=]))/ do |m|
+          groups Punctuation, Name::Attribute, Str::Double
+          push(m[3] == '«' ? :ww_guillemets : :ww_angles)
         end
         # colon-pairs and adverbs: :name, :!flag, :name(...), :2nd
         rule %r/(:!?)(#{ident})/ do
@@ -1008,12 +1049,34 @@ module Rouge
         end
         # character classes: <[a..z]>, <-[\p{Nd}] + [_]>
         rule %r/<(?:[-+!?.]\p{Space}*)?\[(?:\\.|[^\]\\])*\](?:\p{Space}*[-+]\p{Space}*(?:\[(?:\\.|[^\]\\])*\]|:?[#{w}\-]+))*\p{Space}*>/m, Str::Regex
-        # unicode properties: <:Lu>, <+:L>, <:L + :N>, <:L - [a]>
-        rule %r/<[-+!?.]?\p{Space}*:[#{w}\-]+(?:\([^)\n]*\))?(?:\p{Space}*[-+]\p{Space}*(?::[#{w}\-]+|\[(?:\\.|[^\]\\])*\]))*\p{Space}*>/m, Name::Builtin
+        # unicode properties: <:Lu>, <+:L>, <:L + :N>, <:L - [a]>, <:bc<L>>
+        rule %r/<[-+!?.]?\p{Space}*:[#{w}\-]+(?:\([^)\n]*\)|<[^<>\n]*>)?(?:\p{Space}*[-+]\p{Space}*(?::[#{w}\-]+|\[(?:\\.|[^\]\\])*\]))*\p{Space}*>/m, Name::Builtin
         # named assertions: <foo>, <.foo>, <?before ...>, <name=rule>
         rule %r/(<)([?!.+-]?)(\p{Space}*)(#{ident})(=)(#{ident})(>)/ do
           groups Punctuation, Punctuation, Text::Whitespace, Name::Variable,
                  Operator, Name::Function, Punctuation
+        end
+        # ... with arguments, which are code: <expr(3)>, <term=.expr(3)>,
+        # <indent: 2, 3>
+        rule %r/(<)([?!.+-]?)(\p{Space}*)(?:(#{ident})(=)(\.?))?(#{ident})(#{arguments})/ do |m|
+          call = m[8]
+          token Punctuation, m[1]
+          token Punctuation, m[2]
+          token Text::Whitespace, m[3]
+          token Name::Variable, m[4]
+          token Operator, m[5]
+          token Punctuation, m[6]
+          token REGEX_BUILTINS.include?(m[7]) ? Name::Builtin : Name::Function, m[7]
+          sublex call
+        end
+        rule %r/(<)([?!.+-]?)(\p{Space}*)(#{ident})(:)(\p{Space}[^<>\n]*)(?=>)/ do |m|
+          call = m[6]
+          token Punctuation, m[1]
+          token Punctuation, m[2]
+          token Text::Whitespace, m[3]
+          token Name::Function, m[4]
+          token Punctuation, m[5]
+          sublex call
         end
         rule %r/(<)([?!.+-]?)(\p{Space}*)#{word_match.(REGEX_BUILTINS)}(>)?/ do
           groups Punctuation, Punctuation, Text::Whitespace, Name::Builtin, Punctuation

@@ -78,6 +78,22 @@ describe Rouge::Lexers::Raku do
         ['Name.Builtin', 'Str']
     end
 
+    # The states of a lexer are built when they are first used, so what a
+    # process lexes first must not change what it makes of the rest. This
+    # needs a process of its own: here the states may be built already.
+    it 'does not depend on what was lexed before' do
+      script = <<~'RUBY'
+        require 'rouge-raku'
+        lexer = Rouge::Lexers::Raku
+        lexer.new.lex("token t { <expr(3)> <indent: 2> }\nsay q:to/END/;\nx\nEND\n").to_a
+        print lexer.new.lex('"$(1 + 1) &f(2)"').map { |tok, _| tok.qualname }.uniq.sort.join(' ')
+      RUBY
+      lib = File.expand_path('../../lib', __dir__)
+      found = IO.popen([Gem.ruby, '-I', lib, '-e', script], &:read)
+      assert_equal 'Literal.Number.Integer Literal.String.Double Name.Function Operator ' \
+                   'Punctuation Text.Whitespace', found
+    end
+
     it 'lexes the demo without errors' do
       assert_no_errors Rouge::Lexers::Raku.demo
     end

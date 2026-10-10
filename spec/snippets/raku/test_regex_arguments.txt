@@ -1,0 +1,75 @@
+---input---
+token t { <sym> <term=.expr(3)> <fred(1)> <fred: 2, 3> <at(0)> <:bc<L>> }
+ok $d ~~ m:nth(4)/fo+/; $s ~~ m:i/x/;
+
+---tokens---
+'token'       Keyword.Declaration
+' '           Text.Whitespace
+'t'           Name.Function
+' '           Text.Whitespace
+'{'           Punctuation
+' '           Text.Whitespace
+'<'           Punctuation
+'sym'         Name.Function
+'>'           Punctuation
+' '           Text.Whitespace
+'<'           Punctuation
+'term'        Name.Variable
+'='           Operator
+'.'           Punctuation
+'expr'        Name.Function
+'('           Punctuation
+'3'           Literal.Number.Integer
+')>'          Punctuation
+' '           Text.Whitespace
+'<'           Punctuation
+'fred'        Name.Function
+'('           Punctuation
+'1'           Literal.Number.Integer
+')>'          Punctuation
+' '           Text.Whitespace
+'<'           Punctuation
+'fred'        Name.Function
+':'           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+','           Punctuation
+' '           Text.Whitespace
+'3'           Literal.Number.Integer
+'>'           Punctuation
+' '           Text.Whitespace
+'<'           Punctuation
+'at'          Name.Builtin
+'('           Punctuation
+'0'           Literal.Number.Integer
+')>'          Punctuation
+' '           Text.Whitespace
+'<:bc<L>>'    Name.Builtin
+' '           Text.Whitespace
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'ok'          Name.Builtin
+' '           Text.Whitespace
+'$d'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'m'           Literal.String.Regex
+':'           Punctuation
+'nth'         Name.Attribute
+'('           Punctuation
+'4'           Literal.Number.Integer
+')'           Punctuation
+'/fo'         Literal.String.Regex
+'+'           Operator
+'/'           Literal.String.Regex
+';'           Punctuation
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'m:i/x/'      Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace

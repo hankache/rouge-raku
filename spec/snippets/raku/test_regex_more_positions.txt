@@ -1,0 +1,60 @@
+---input---
+subset S of Str where /^foo/; has $.b handles /^hi|oo/;
+("fom" ... /foo/); {/B/ ff^ /D/}; say 1 / 2;
+
+---tokens---
+'subset'      Keyword.Declaration
+' '           Text.Whitespace
+'S'           Name.Class
+' '           Text.Whitespace
+'of'          Keyword
+' '           Text.Whitespace
+'Str'         Keyword.Type
+' '           Text.Whitespace
+'where'       Keyword
+' '           Text.Whitespace
+'/'           Literal.String.Regex
+'^'           Operator
+'foo/'        Literal.String.Regex
+';'           Punctuation
+' '           Text.Whitespace
+'has'         Keyword.Declaration
+' '           Text.Whitespace
+'$.b'         Name.Variable.Instance
+' '           Text.Whitespace
+'handles'     Keyword
+' '           Text.Whitespace
+'/'           Literal.String.Regex
+'^'           Operator
+'hi'          Literal.String.Regex
+'|'           Operator
+'oo/'         Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'('           Punctuation
+'"fom"'       Literal.String.Double
+' '           Text.Whitespace
+'...'         Operator
+' '           Text.Whitespace
+'/foo/'       Literal.String.Regex
+');'          Punctuation
+' '           Text.Whitespace
+'{'           Punctuation
+'/B/'         Literal.String.Regex
+' '           Text.Whitespace
+'ff'          Operator.Word
+'^'           Operator
+' '           Text.Whitespace
+'/D/'         Literal.String.Regex
+'};'          Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

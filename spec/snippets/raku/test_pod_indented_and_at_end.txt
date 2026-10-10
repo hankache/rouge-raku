@@ -1,0 +1,50 @@
+---input---
+sub f {
+    =begin pod
+    Indented C<pod>.
+    =end pod
+
+    my $x
+        = 5;
+}
+=head1 At the end
+
+---tokens---
+'sub'         Keyword.Declaration
+' '           Text.Whitespace
+'f'           Name.Function
+' '           Text.Whitespace
+'{'           Punctuation
+'\n    '      Text.Whitespace
+'=begin'      Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n'          Text.Whitespace
+
+'    Indented ' Comment.Multiline
+'C'           Name.Decorator
+'<'           Punctuation
+'pod'         Literal.String.Backtick
+'>'           Punctuation
+'.'           Comment.Multiline
+'\n    '      Text.Whitespace
+'=end'        Comment.Preproc
+' '           Text.Whitespace
+'pod'         Name.Namespace
+'\n\n    '    Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$x'          Name.Variable
+'\n        '  Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'5'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'}'           Punctuation
+'\n'          Text.Whitespace
+
+'=head1'      Comment.Preproc
+' At the end' Generic.Heading
+'\n'          Text.Whitespace
