@@ -1,0 +1,91 @@
+---input---
+my $x = q'x; q.new; q = 1; qh.iterator;
+say q"a" ~ q/b/ ~ q!c! ~ q|d| ~ Q~e~ ~ q%f% ~ q@g@ ~ qx`pwd` ~ q'1 2';
+my $t = q:c 'Hello'; my $n = q:nfc'ab';
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$x'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'q\'x'        Name
+';'           Punctuation
+' '           Text.Whitespace
+'q'           Name
+'.'           Operator
+'new'         Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'q'           Name
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'qh'          Name
+'.'           Operator
+'iterator'    Name.Builtin
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q"a"'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q/b/'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q!c!'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q|d|'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'Q~e~'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q%f%'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q@g@'        Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'qx`pwd`'     Literal.String
+' '           Text.Whitespace
+'~'           Operator
+' '           Text.Whitespace
+'q\'1 2\''    Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$t'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'q:c \''      Literal.String
+'Hello'       Literal.String.Double
+'\''          Literal.String
+';'           Punctuation
+' '           Text.Whitespace
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$n'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'q:nfc\'ab\'' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace

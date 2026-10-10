@@ -326,6 +326,11 @@ module Rouge
       quote_start = "(?<![#{w}'\\-.])"
       # the adverbs of a quote: q:to, qq:!c, m:i:g
       adverbs = "(?:\\p{Space}*:!?[#{w}]+)+"
+      # What can delimit a quote, besides a bracket. Most punctuation
+      # could, but in "q.new" and "q = 1" q is a name. An apostrophe in
+      # front of a letter is part of an identifier (q'x), unless adverbs
+      # came first (q:to 'END'), which the rule captures as its group 2.
+      quote_delimiter = "(?:[\\/!|\"~^%@`§]|(?(2)'|'(?![\\p{L}_])))"
       # Between a quote word and its delimiter, whitespace can only come
       # before a bracket or a slash: in "q ~~ $x" and "m ?? 1 !! 2", q and
       # m are names.
@@ -642,7 +647,7 @@ module Rouge
         # other characters can not, so qq|| is an empty string.
         # and heredocs (q:to/END/). Before the keyword and builtin rules,
         # which would otherwise take q for a word.
-        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|[^0-9a-zA-Z:\p{Space}=,;)])/ do |m|
+        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|#{quote_delimiter})/ do |m|
           opening = m[0]
           adverbs = m[2].to_s
           # qq strings (and the :qq / :c adverbs) interpolate
@@ -669,11 +674,12 @@ module Rouge
           lex_regex_part(m, opener, :regex_body)
         end
         # substitution and transliteration: s/a/b/, S{a}{b}, s:2nd/a/b/, tr/a-z/A-Z/
-        # (a pattern can not be empty, so S|| and S%% are operators)
+        # (a pattern can not be empty, so S|| and S%% are operators, and so
+        # is S!~~)
         rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?=\p{Space}*:!?[#{w}])\p{Space}*(?::!?[#{w}\-]+(?:\([^)\n]*\))?\p{Space}*)+((#{OPEN_BRACKET})\3*|[^#{w}:\p{Space}$@%&=,;)])/ do |m|
           lex_substitution(m, m[0], m[1], m[2])
         end
-        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)#{before_delimiter}(([{(\[])\3*|([\/|!^~@%])(?!\4))/ do |m|
+        rule %r/#{quote_start}(ss|s|SS|S|tr|TR)(?!!~~)#{before_delimiter}(([{(\[])\3*|([\/|!^~@%])(?!\4))/ do |m|
           lex_substitution(m, m[0], m[1], m[2])
         end
         # --- curly and corner quotes: ‘raw’ (or ‚this‘, or ’this‘),
@@ -732,8 +738,9 @@ module Rouge
         rule %r/[∞∅]/, Name::Constant
         # version literals: v6.d, v1.2.3, v1.2+
         rule %r/(?<!#{ident_char})v\p{Nd}+(?:\.(?:\p{Nd}+|\*|[a-z]))*\+?(?!#{ident_end})/, Num
-        # meta operators: Z+, X~, R-, Z=>, Rcmp, and x=, xx=
-        rule %r/#{nw}[RXZ](?:\*\*|\/\/|&&|\|\||<=>|=>|==|!=|<=|>=|~~|[-+*\/%~,&|^?<>]|(?:cmp|eq|ne|lt|gt|le|ge|leg|eqv|min|max|div|mod|and|or|xor|x|xx)(?![#{w}'\-]))/, Operator
+        # meta operators: Z+, X~, R-, Z=>, Rcmp, S!~~, and x=, xx=
+        rule %r/#{nw}S(?:!~~|~~|&&|\|\||\^\^|%%|\/\/|==|!=|&(?=\p{Space})|xx?(?![#{w}'\-]))/, Operator
+        rule %r/#{nw}[RXZ](?:!~~|\*\*|\/\/|&&|\|\||<=>|=>|==|!=|<=|>=|~~|[-+*\/%~,&|^?<>]|(?:cmp|eq|ne|lt|gt|le|ge|leg|eqv|min|max|div|mod|and|or|xor|x|xx)(?![#{w}'\-]))/, Operator
         rule %r/#{nw}(?:xx?|min|max)=(?![=~>])/, Operator
         rule %r/#{word_match.(WORD_OPERATORS, '(?!\()')}/, Operator::Word
 
@@ -752,7 +759,7 @@ module Rouge
         rule %r/(?:«|»|<<|>>)[-+*\/%~=!&|^?<>]+(?:«|»|<<|>>)/, Operator
         rule %r/[-+*\/%~!?|^]+«/, Operator
         # an ASCII prefix hyper, when its operand follows: -<< (3, 2, 1)
-        rule %r/[-+~!?|^]<<(?=\p{Space}*[$@%(\[])/, Operator
+        rule %r/[-+~!?|^]<<(?=\p{Space}*[$@%(\[<])/, Operator
         # ... and around a bracketed operator: «[op]«, <<[op]>>. With a
         # variable inside it is a subscript: @rows>>[$i]>>.chars
         rule %r/(?:«|»|<<|>>)\[[^\]\n$@%]+\](?:«|»|<<|>>)/, Operator

@@ -1,0 +1,24 @@
+---input---
+my $s = join |<< <a x y z>;
+say $s;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$s'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'join'        Name.Builtin
+' '           Text.Whitespace
+'|<<'         Operator
+' '           Text.Whitespace
+'<a x y z>'   Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$s'          Name.Variable
+';'           Punctuation
+'\n'          Text.Whitespace

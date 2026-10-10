@@ -67,8 +67,7 @@ $s ~~ s {a} = 'b'; $s ~~ s:g /a/b/; say S/a/b/ given $x; $s ~~ s|a|b|;
 '('           Punctuation
 '1'           Literal.Number.Integer
 ' '           Text.Whitespace
-'S'           Name
-'||'          Operator
+'S||'         Operator
 ' '           Text.Whitespace
 '2'           Literal.Number.Integer
 '),'          Punctuation
@@ -84,8 +83,7 @@ $s ~~ s {a} = 'b'; $s ~~ s:g /a/b/; say S/a/b/ given $x; $s ~~ s|a|b|;
 ' '           Text.Whitespace
 '$i'          Name.Variable
 ' '           Text.Whitespace
-'S'           Name
-'%%'          Operator
+'S%%'         Operator
 ' '           Text.Whitespace
 '1'           Literal.Number.Integer
 ';'           Punctuation

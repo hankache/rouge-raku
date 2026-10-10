@@ -1,0 +1,70 @@
+---input---
+is (5 S!~~ *.succ)(41), True; 1 S& 2; 1 S&& 2; 1 Sxx 2; 2 S== 2;
+Seq.new; S-Int.isa(Int); foo(S, S);
+
+---tokens---
+'is'          Keyword
+' '           Text.Whitespace
+'('           Punctuation
+'5'           Literal.Number.Integer
+' '           Text.Whitespace
+'S!~~'        Operator
+' '           Text.Whitespace
+'*.'          Operator
+'succ'        Name.Builtin
+')('          Punctuation
+'41'          Literal.Number.Integer
+'),'          Punctuation
+' '           Text.Whitespace
+'True'        Keyword.Constant
+';'           Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'S&'          Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'S&&'         Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'Sxx'         Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+' '           Text.Whitespace
+'S=='         Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'Seq'         Keyword.Type
+'.'           Operator
+'new'         Name.Builtin
+';'           Punctuation
+' '           Text.Whitespace
+'S-Int'       Name
+'.'           Operator
+'isa'         Name.Builtin
+'('           Punctuation
+'Int'         Keyword.Type
+');'          Punctuation
+' '           Text.Whitespace
+'foo'         Name.Function
+'('           Punctuation
+'S'           Name
+','           Punctuation
+' '           Text.Whitespace
+'S'           Name
+');'          Punctuation
+'\n'          Text.Whitespace
