@@ -33,7 +33,8 @@
 - Pod: code blocks are lexed as Raku unless they name another language
   (`:lang<shell>`), and the other verbatim blocks are plain text.
   Formatting codes can use `<< >>` and `« »`, nest and span lines. The
-  options of a directive are lexed as pairs. Pod can be indented, and can
+  options of a directive are lexed as pairs, and the name of a block is
+  part of its directive (`=begin comment`). Pod can be indented, and can
   end with the file.
 
 ## 0.1.0

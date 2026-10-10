@@ -10,7 +10,7 @@ some text
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'table'       Name.Namespace
+'table'       Comment.Preproc
 ' '           Text.Whitespace
 ':'           Punctuation
 'caption'     Name.Attribute
@@ -29,12 +29,12 @@ some text
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'table'       Name.Namespace
+'table'       Comment.Preproc
 '\n\n'        Text.Whitespace
 
 '=for'        Comment.Preproc
 ' '           Text.Whitespace
-'comment'     Name.Namespace
+'comment'     Comment.Preproc
 ' '           Text.Whitespace
 ':'           Punctuation
 'hidden'      Name.Attribute

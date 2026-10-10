@@ -7,7 +7,7 @@ B<bold with I<italic> inside> and C<%h<key>> too.
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 'Use '        Comment.Multiline
@@ -51,5 +51,5 @@ B<bold with I<italic> inside> and C<%h<key>> too.
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace

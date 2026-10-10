@@ -19,12 +19,12 @@ Text again.
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'code'        Name.Namespace
+'code'        Comment.Preproc
 '\n'          Text.Whitespace
 
 'my'          Keyword.Declaration
@@ -41,12 +41,12 @@ Text again.
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'code'        Name.Namespace
+'code'        Comment.Preproc
 '\n\n'        Text.Whitespace
 
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'code'        Name.Namespace
+'code'        Comment.Preproc
 ' '           Text.Whitespace
 ':'           Punctuation
 'lang'        Name.Attribute
@@ -57,12 +57,12 @@ Text again.
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'code'        Name.Namespace
+'code'        Comment.Preproc
 '\n\n'        Text.Whitespace
 
 '=for'        Comment.Preproc
 ' '           Text.Whitespace
-'code'        Name.Namespace
+'code'        Comment.Preproc
 '\n'          Text.Whitespace
 
 'say'         Name.Builtin
@@ -84,5 +84,5 @@ Text again.
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace

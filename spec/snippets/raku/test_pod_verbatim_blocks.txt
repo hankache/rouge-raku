@@ -10,14 +10,14 @@ say 1;
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'comment'     Name.Namespace
+'comment'     Comment.Preproc
 '\n'          Text.Whitespace
 
 'B<not> a code\n    =begin comment\n    =end comment\nstill a comment\n' Comment.Multiline
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'comment'     Name.Namespace
+'comment'     Comment.Preproc
 '\n'          Text.Whitespace
 
 'say'         Name.Builtin

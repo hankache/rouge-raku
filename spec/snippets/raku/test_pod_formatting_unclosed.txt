@@ -10,7 +10,7 @@ say 1;
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 'An '         Comment.Multiline
@@ -32,7 +32,7 @@ say 1;
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 'say'         Name.Builtin

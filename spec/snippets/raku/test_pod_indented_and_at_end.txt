@@ -18,7 +18,7 @@ sub f {
 '\n    '      Text.Whitespace
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 '    Indented ' Comment.Multiline
@@ -30,7 +30,7 @@ sub f {
 '\n    '      Text.Whitespace
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n\n    '    Text.Whitespace
 'my'          Keyword.Declaration
 ' '           Text.Whitespace

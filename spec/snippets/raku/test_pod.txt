@@ -11,7 +11,7 @@ anything $here "goes
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 'Some pod'    Comment.Multiline
@@ -19,7 +19,7 @@ anything $here "goes
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 '=head1'      Comment.Preproc

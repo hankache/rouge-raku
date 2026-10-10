@@ -587,7 +587,7 @@ module Rouge
         token Text::Whitespace, opening[0]
         token Comment::Preproc, opening[1]
         token Text::Whitespace, opening[2]
-        token Name::Namespace, name
+        token Comment::Preproc, name
         sublex config, :pod_config_line
 
         if name == 'code' && !config.match?(/:lang<(?!raku>)/)
@@ -1156,11 +1156,11 @@ module Rouge
           groups Text::Whitespace, Comment::Preproc, Generic::Heading
         end
         rule %r/^([ \t]*)(=(?:begin|for))([ \t]*)([#{w}\-]*)/ do
-          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
+          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Comment::Preproc
           push :pod_config
         end
         rule %r/^([ \t]*)(=(?:end|finish))([ \t]*)([#{w}\-]*)/ do
-          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Name::Namespace
+          groups Text::Whitespace, Comment::Preproc, Text::Whitespace, Comment::Preproc
         end
         rule %r/^([ \t]*)(=[A-Za-z][#{w}]*)/ do
           groups Text::Whitespace, Comment::Preproc

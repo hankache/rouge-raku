@@ -12,7 +12,7 @@ say "after";
 ---tokens---
 '=begin'      Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 '=head1'      Comment.Preproc
@@ -48,7 +48,7 @@ say "after";
 
 '=end'        Comment.Preproc
 ' '           Text.Whitespace
-'pod'         Name.Namespace
+'pod'         Comment.Preproc
 '\n'          Text.Whitespace
 
 '=head2'      Comment.Preproc
