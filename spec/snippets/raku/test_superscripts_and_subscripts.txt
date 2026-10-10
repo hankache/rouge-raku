@@ -18,14 +18,16 @@ c d>;
 ' '           Text.Whitespace
 '*'           Operator
 ' '           Text.Whitespace
-'%h<a b>'     Name.Variable
+'%h'          Name.Variable
+'<a b>'       Literal.String
 '['           Punctuation
 '0'           Literal.Number.Integer
 ']'           Punctuation
 ' '           Text.Whitespace
 '+'           Operator
 ' '           Text.Whitespace
-'%h«k»'       Name.Variable
+'%h'          Name.Variable
+'«k»'         Literal.String.Double
 ';'           Punctuation
 '\n'          Text.Whitespace
 

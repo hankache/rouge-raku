@@ -9,7 +9,8 @@ my $r = qh ~~ Setty ?? 1 !! 2; say (m ?? 2 !! 0);
 ' '           Text.Whitespace
 '"['          Literal.String.Double
 '{'           Punctuation
-'$p<a>'       Name.Variable
+'$p'          Name.Variable
+'<a>'         Literal.String
 ' '           Text.Whitespace
 '//'          Operator
 ' '           Text.Whitespace

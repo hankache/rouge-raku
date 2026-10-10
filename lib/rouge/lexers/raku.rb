@@ -608,6 +608,20 @@ module Rouge
         push :pod_format
       end
 
+      # Lexes a variable and the subscripts in angle brackets that follow
+      # it, which are quoted words, not a part of its name: %h<key>,
+      # %h<<$key>>, %h«$key»
+      def lex_variable(type, name, subscripts)
+        token type, name
+        subscripts.scan(/<<[^>\n]*>>|«[^»\n]*»|<[^>\n]*>/) do |subscript|
+          if subscript.start_with?('<<', '«')
+            sublex subscript
+          else
+            token Str, subscript
+          end
+        end
+      end
+
       # Lexes +text+ on its own, starting in +state+.
       def sublex(text, state = :root)
         lexer = self.class.new(options)
@@ -747,18 +761,28 @@ module Rouge
 
         # --- variables. Nothing else starts with a sigil either.
         # attributes ($!x, $.x) and compile-time / pod variables ($?FILE, $=pod)
-        rule %r/[$@%&][.!]#{qualified_ident}#{angle_subscripts}/, Name::Variable::Instance
-        rule %r/[$@%&][?=]#{ident}#{angle_subscripts}/, Name::Variable::Magic
+        rule %r/([$@%&][.!]#{qualified_ident})(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable::Instance, m[1], m[2])
+        end
+        rule %r/([$@%&][?=]#{ident})(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable::Magic, m[1], m[2])
+        end
         rule %r/::\?[#{w}]+/, Name::Variable::Global
-        rule %r/[$@%&]\*#{qualified_ident}#{angle_subscripts}/, Name::Variable::Global
-        rule %r/\$[!\/¢]#{angle_subscripts}/, Name::Variable::Global
+        rule %r/([$@%&]\*#{qualified_ident})(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable::Global, m[1], m[2])
+        end
+        rule %r/(\$[!\/¢])(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable::Global, m[1], m[2])
+        end
         # the & sigil names a routine: &infix:<+>, &squared, &squared(2),
         # which may be one that comes with the language: &elems
         rule %r/&#{op_categories}#{op_name_suffix}/, Name::Function
         rule %r/&(?:::)?(#{qualified_ident})/ do |m|
           token builtins.include?(m[1]) ? Name::Builtin : Name::Function
         end
-        rule %r/(?:[$@%&][\^:~]?(?:::)?#{qualified_ident}#{extended}|[$@]\p{Nd}+)#{angle_subscripts}/, Name::Variable
+        rule %r/([$@%&][\^:~]?(?:::)?#{qualified_ident}#{extended}|[$@]\p{Nd}+)(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable, m[1], m[2])
+        end
         rule %r/\$(?:<[^>\n]*>)+/, Name::Variable
         # anonymous variables: "state $ = 0", "$++"
         rule %r/[$@](?=[\p{Space}=;,)\]]|\+\+|--)/, Name::Variable
@@ -1092,7 +1116,9 @@ module Rouge
         end
         rule %r/\$<[#{w}'\-]+>/, Name::Variable
         rule %r/\$\p{Nd}+/, Name::Variable
-        rule %r/[$@][.^:?=!~*]?#{qualified_ident}#{angle_subscripts}/, Name::Variable
+        rule %r/([$@][.^:?=!~*]?#{qualified_ident})(#{angle_subscripts})/ do |m|
+          lex_variable(Name::Variable, m[1], m[2])
+        end
         # literals
         rule %r/'(?:\\.|[^'\\])*'/m, Str::Single
         rule %r/[‘‚’][^‘’\n]*[’‘]/, Str::Single

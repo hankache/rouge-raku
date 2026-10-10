@@ -28,7 +28,8 @@ say "@array.[] %h«a» @releases».<tag> $x.[0] $file.txt";
 '.'           Operator
 '[]'          Punctuation
 ' '           Literal.String.Double
-'%h«a»'       Name.Variable
+'%h'          Name.Variable
+'«a»'         Literal.String.Double
 ' '           Literal.String.Double
 '@releases'   Name.Variable
 '».'          Operator

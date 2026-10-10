@@ -23,7 +23,8 @@
   the zip operator, a word after a minus sign keeps its meaning (`-Inf`),
   `%` and `&` in front of a digit are operators (`$x%%3`), operator names
   can be in double angle brackets, and the label after `next`, `last` and
-  `redo` is a label.
+  `redo` is a label. A subscript in angle brackets is a string, not a part
+  of the variable (`%h<key>`).
 - Hyper operators around a Unicode operator (`»⋅«`), and a hyper prefix in
   front of a word list.
 - Lists: the native types of NativeCall, the documented methods of the

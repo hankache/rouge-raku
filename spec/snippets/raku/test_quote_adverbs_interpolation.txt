@@ -30,7 +30,8 @@ say qq:!s/minus scalars: $name {1}/, Qs/$name/, Qa/@list[0]/, Qc/{1}/, Qb/\n $x/
 ' '           Text.Whitespace
 'q:h/'        Literal.String
 'hashes: '    Literal.String.Double
-'%hash<key>'  Name.Variable
+'%hash'       Name.Variable
+'<key>'       Literal.String
 ' $name'      Literal.String.Double
 '/'           Literal.String
 ','           Punctuation

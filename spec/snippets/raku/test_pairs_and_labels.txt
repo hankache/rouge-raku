@@ -53,7 +53,8 @@ my Int:D $z = 1;
 
 'say'         Name.Builtin
 ' '           Text.Whitespace
-'%h<a>'       Name.Variable
+'%h'          Name.Variable
+'<a>'         Literal.String
 ':'           Punctuation
 'exists'      Name.Attribute
 ','           Punctuation

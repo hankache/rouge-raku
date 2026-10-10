@@ -59,7 +59,8 @@ my $foo:bar<baz> = 1; my $foo:bar«$i» = 2; my $take-me:['home'] = 3; say $foo:
 ' '           Text.Whitespace
 '};'          Punctuation
 ' '           Text.Whitespace
-'%h<a>'       Name.Variable
+'%h'          Name.Variable
+'<a>'         Literal.String
 ':'           Punctuation
 'exists'      Name.Attribute
 ';'           Punctuation

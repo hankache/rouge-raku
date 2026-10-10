@@ -11,7 +11,8 @@
 '0'           Literal.Number.Integer
 ']'           Punctuation
 ' '           Literal.String.Double
-'%h<k>'       Name.Variable
+'%h'          Name.Variable
+'<k>'         Literal.String
 ' '           Literal.String.Double
 '$obj'        Name.Variable
 '.'           Operator
