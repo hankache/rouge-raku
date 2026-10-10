@@ -1,0 +1,31 @@
+---input---
+my $v = 2 + ⅒ + Ⅷ + ½; say $x²;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$v'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'⅒'           Literal.Number
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'Ⅷ'           Literal.Number
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'½'           Literal.Number
+';'           Punctuation
+' '           Text.Whitespace
+'say'         Name.Builtin
+' '           Text.Whitespace
+'$x'          Name.Variable
+'²'           Operator
+';'           Punctuation
+'\n'          Text.Whitespace

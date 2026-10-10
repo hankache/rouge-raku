@@ -1,0 +1,37 @@
+---input---
+my @a = qww<quote "protected words" here>, qqww<with "quoted words" $name>;
+my @b = qqw<with $name words>, qw<a b>;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@a'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'qww<quote "protected words" here>' Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'qqww<'       Literal.String
+'with "quoted words" ' Literal.String.Double
+'$name'       Name.Variable
+'>'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@b'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'qqw<'        Literal.String
+'with '       Literal.String.Double
+'$name'       Name.Variable
+' words'      Literal.String.Double
+'>'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'qw<a b>'     Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace

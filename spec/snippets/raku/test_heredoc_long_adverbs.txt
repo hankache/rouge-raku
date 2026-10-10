@@ -1,0 +1,63 @@
+---input---
+my $n = "x";
+say q:heredoc/THE END/;
+    A terminator with a space in it.
+    THE END
+say Q:double:heredoc/E/;
+    value $n
+    E
+say q:closure:heredoc/E/;
+    sum {1 + 1}
+    E
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$n'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'"x"'         Literal.String.Double
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:heredoc/THE END/' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'    A terminator with a space in it.\n    THE END' Literal.String
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'Q:double:heredoc/E/' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'    value '  Literal.String.Double
+'$n'          Name.Variable
+'\n'          Literal.String.Double
+
+'    E'       Literal.String
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:closure:heredoc/E/' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'    sum '    Literal.String.Double
+'{'           Punctuation
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'+'           Operator
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+'}'           Punctuation
+'\n'          Literal.String.Double
+
+'    E'       Literal.String
+'\n'          Text.Whitespace

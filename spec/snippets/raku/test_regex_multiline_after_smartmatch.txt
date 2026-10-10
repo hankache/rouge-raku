@@ -1,0 +1,41 @@
+---input---
+my $m = $text ~~ / some
+                   \s+  # a comment
+                   text /;
+say 1 / 2;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'$m'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'$text'       Name.Variable
+' '           Text.Whitespace
+'~~'          Operator
+' '           Text.Whitespace
+'/'           Literal.String.Regex
+' '           Text.Whitespace
+'some'        Literal.String.Regex
+'\n                   ' Text.Whitespace
+'\\s'         Literal.String.Escape
+'+'           Operator
+'  '          Text.Whitespace
+'# a comment' Comment.Single
+'\n                   ' Text.Whitespace
+'text'        Literal.String.Regex
+' '           Text.Whitespace
+'/'           Literal.String.Regex
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'1'           Literal.Number.Integer
+' '           Text.Whitespace
+'/'           Operator
+' '           Text.Whitespace
+'2'           Literal.Number.Integer
+';'           Punctuation
+'\n'          Text.Whitespace

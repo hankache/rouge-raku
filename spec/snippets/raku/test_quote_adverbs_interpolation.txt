@@ -1,0 +1,134 @@
+---input---
+say q:s/scalars: $name @list[0] {1} \n/, q:a/arrays: @list[0] $name/;
+say q:h/hashes: %hash<key> $name/, q:f/functions: &code() $name/;
+say q:c/closures: {"in $name"} $name/, q:b/backslashes: \n $name/;
+say q:s:a:c/several: $name @list[0] {1}/, Q:s/raw: $name \n/, Q:qq/all: $name/;
+say qq:!s/minus scalars: $name {1}/, Qs/$name/, Qa/@list[0]/, Qc/{1}/, Qb/\n $x/;
+
+---tokens---
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:s/'        Literal.String
+'scalars: '   Literal.String.Double
+'$name'       Name.Variable
+' @list[0] {1} \\n' Literal.String.Double
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'q:a/'        Literal.String
+'arrays: '    Literal.String.Double
+'@list'       Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' $name'      Literal.String.Double
+'/'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:h/'        Literal.String
+'hashes: '    Literal.String.Double
+'%hash<key>'  Name.Variable
+' $name'      Literal.String.Double
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'q:f/'        Literal.String
+'functions: ' Literal.String.Double
+'&code'       Name.Function
+'()'          Punctuation
+' $name'      Literal.String.Double
+'/'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:c/'        Literal.String
+'closures: '  Literal.String.Double
+'{'           Punctuation
+'"in '        Literal.String.Double
+'$name'       Name.Variable
+'"'           Literal.String.Double
+'}'           Punctuation
+' $name'      Literal.String.Double
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'q:b/'        Literal.String
+'backslashes: ' Literal.String.Double
+'\\n'         Literal.String.Escape
+' $name'      Literal.String.Double
+'/'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'q:s:a:c/'    Literal.String
+'several: '   Literal.String.Double
+'$name'       Name.Variable
+' '           Literal.String.Double
+'@list'       Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+' '           Literal.String.Double
+'{'           Punctuation
+'1'           Literal.Number.Integer
+'}'           Punctuation
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Q:s/'        Literal.String
+'raw: '       Literal.String.Double
+'$name'       Name.Variable
+' \\n'        Literal.String.Double
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Q:qq/'       Literal.String
+'all: '       Literal.String.Double
+'$name'       Name.Variable
+'/'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace
+
+'say'         Name.Builtin
+' '           Text.Whitespace
+'qq:!s/'      Literal.String
+'minus scalars: $name ' Literal.String.Double
+'{'           Punctuation
+'1'           Literal.Number.Integer
+'}'           Punctuation
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Qs/'         Literal.String
+'$name'       Name.Variable
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Qa/'         Literal.String
+'@list'       Name.Variable
+'['           Punctuation
+'0'           Literal.Number.Integer
+']'           Punctuation
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Qc/'         Literal.String
+'{'           Punctuation
+'1'           Literal.Number.Integer
+'}'           Punctuation
+'/'           Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'Qb/'         Literal.String
+'\\n'         Literal.String.Escape
+' $x'         Literal.String.Double
+'/'           Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace

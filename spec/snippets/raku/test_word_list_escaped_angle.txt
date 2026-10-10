@@ -1,0 +1,16 @@
+---input---
+my @w = <with \> escaped angle>, <--long-option -5 +3>;
+
+---tokens---
+'my'          Keyword.Declaration
+' '           Text.Whitespace
+'@w'          Name.Variable
+' '           Text.Whitespace
+'='           Operator
+' '           Text.Whitespace
+'<with \\> escaped angle>' Literal.String
+','           Punctuation
+' '           Text.Whitespace
+'<--long-option -5 +3>' Literal.String
+';'           Punctuation
+'\n'          Text.Whitespace

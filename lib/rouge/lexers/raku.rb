@@ -304,7 +304,7 @@ module Rouge
 
       # Ruby's \w, \d and \s are ASCII-only. Raku is not, so the rules use
       # \p{Nd} and \p{Space}, and word characters are spelled out.
-      w = '\p{L}\p{N}_'
+      w = W = '\p{L}\p{N}_'
       # Superscript digits and signs are exponents ("$x²"), so they must
       # not be part of an identifier.
       sup = '²³¹⁰-⁻'
@@ -423,10 +423,22 @@ module Rouge
       builtins = Set.new(BUILTINS)
 
       OPEN_BRACKET = /[#{open_brackets}]/
-      HEREDOC_OPENER = /#{nw}(qq|q|Q)[a-zA-Z]?\p{Space}*((?::[#{w}]+\p{Space}*)+)([^#{w}\p{Space}:])/
+      HEREDOC_OPENER = /#{nw}(qq|q|Q)(ww|[a-zA-Z])?\p{Space}*((?::!?[#{w}]+\p{Space}*)+)([^#{w}\p{Space}:])/
+      HEREDOC_ADVERB = /:(?:to|heredoc)\b/
+      # What a quote can interpolate: scalars, arrays, hashes, function
+      # calls, closures and backslash escapes. Each has an adverb that
+      # turns it on, with a short and a long name: q:s, q:scalar
+      INTERPOLATIONS = {
+        's' => :s, 'scalar' => :s, 'a' => :a, 'array' => :a, 'h' => :h, 'hash' => :h,
+        'f' => :f, 'function' => :f, 'c' => :c, 'closure' => :c,
+        'b' => :b, 'backslash' => :b,
+      }.freeze
+      EVERY_INTERPOLATION = INTERPOLATIONS.values.uniq.freeze
+      SIGIL_INTERPOLATIONS = { '$' => :s, '@' => :a, '%' => :h, '&' => :f }.freeze
 
       start do
         @brace_levels = []
+        @interpolations = EVERY_INTERPOLATION
         @pod_formats = []
       end
 
@@ -579,12 +591,43 @@ module Rouge
         lexer = self.class.new(options)
         lexer.reset!
         lexer.push(state) unless state == :root
+        yield lexer if block_given?
         delegate(lexer, text)
+      end
+
+      # What the quote +word+ interpolates, given the letter that follows
+      # it (Qs) and its +adverbs+ (q:s, qq:!c).
+      def interpolations_of(word, letter, adverbs)
+        found = word == 'qq' ? EVERY_INTERPOLATION.dup : []
+        found << INTERPOLATIONS[letter] if INTERPOLATIONS.key?(letter)
+        adverbs.scan(/:(!?)([#{W}]+)/o) do |negated, name|
+          kinds = %w(qq double).include?(name) ? EVERY_INTERPOLATION : [INTERPOLATIONS[name]].compact
+          found = negated.empty? ? found | kinds : found - kinds
+        end
+        found
+      end
+
+      # Lexes the +body+ of a quote, in which only +interpolations+ are
+      # special.
+      def lex_quoted(body, interpolations)
+        if interpolations.empty?
+          token Str, body
+        else
+          sublex(body, :interpolated) { |lexer| lexer.interpolations = interpolations }
+        end
+      end
+
+      attr_writer :interpolations
+
+      # Whether the string being lexed interpolates +kind+. Code inside a
+      # string is code like any other, and so are the strings in it.
+      def interpolates?(kind)
+        !@brace_levels.empty? || @interpolations.include?(kind)
       end
 
       # Lexes what follows the opening quote of a heredoc: the rest of
       # that line, which is ordinary code, and then the heredoc's body.
-      def lex_heredocs(stream, terminator, interpolate)
+      def lex_heredocs(stream, terminator, interpolations)
         rest_of_line = stream.scan(/[^\n]*/)
         sublex rest_of_line
         return unless stream.scan(/\n/)
@@ -592,8 +635,8 @@ module Rouge
         token Text::Whitespace, "\n"
 
         # the bodies follow in the order their heredocs were opened
-        heredocs = [[terminator, interpolate]] + extra_heredocs(rest_of_line)
-        heredocs.each_with_index do |(name, interpolates), index|
+        heredocs = [[terminator, interpolations]] + extra_heredocs(rest_of_line)
+        heredocs.each_with_index do |(name, interpolated), index|
           last_line = /^[ \t]*#{Regexp.escape(name)}[ \t]*$/
           body = stream.scan_until(/(?=#{last_line})/)
           if body.nil?
@@ -601,11 +644,7 @@ module Rouge
             stream.terminate
           end
 
-          if interpolates
-            sublex body, :interpolated
-          else
-            token Str, body
-          end
+          lex_quoted(body, interpolated)
           break if stream.eos?
 
           token Str, stream.scan(last_line)
@@ -616,19 +655,19 @@ module Rouge
       end
 
       # Heredocs opened later on the same line, as pairs of terminator
-      # and whether the body interpolates.
+      # and what the body interpolates.
       def extra_heredocs(line)
         found = []
         pos = 0
         while (match = HEREDOC_OPENER.match(line, pos))
           pos = match.end(0)
-          quote, adverbs, opener = match.captures
-          next unless adverbs.match?(/:to\b/)
+          quote, letter, adverbs, opener = match.captures
+          next unless adverbs.match?(HEREDOC_ADVERB)
 
           stop = line.index(BRACKETS.fetch(opener, opener), pos)
           next unless stop
 
-          found << [line[pos...stop], quote == 'qq' || adverbs.include?(':qq')]
+          found << [line[pos...stop], interpolations_of(quote, letter, adverbs)]
         end
         found
       end
@@ -647,7 +686,9 @@ module Rouge
           sublex m[0], :pod_body
         end
         # a regex without m or rx: $s ~~ /x/, .subst(/x/, ''), say /x/
-        rule %r/#{regex_position}(\p{Space}*)(\/)(?!\/)(?=(?:\\[\s\S]|[^\/\\\n])*\/)/ do |m|
+        # It has to end on the line it starts on, as the "/" may be a
+        # division after all, except after a smartmatch, where it can not.
+        rule %r/#{regex_position}(\p{Space}*)(\/)(?!\/)(?:(?<=~~\/|~~\p{Space}\/)|(?=(?:\\[\s\S]|[^\/\\\n])*\/))/ do |m|
           opener = m[2]
           groups Text::Whitespace, Str::Regex
           lex_regex_part(m, opener, :regex_body)
@@ -713,6 +754,8 @@ module Rouge
         rule %r/(?:\p{Nd}+(?:_\p{Nd}+)*\.|#{leading_dot})\p{Nd}+(?:_\p{Nd}+)*(?:e[+-]?\p{Nd}+)?/i, Num::Float
         rule %r/\p{Nd}+(?:_\p{Nd}+)*e[+-]?\p{Nd}+/i, Num::Float
         rule %r/\p{Nd}+(?:_\p{Nd}+)*/, Num::Integer
+        # the other characters that are numbers: ⅒, ½, Ⅷ
+        rule %r/[\p{No}\p{Nl}&&[^#{sup}]]/, Num
         # rational and complex literals: <1/3>, <1+2i>
         rule %r/<[-+]?\p{Nd}+\/\p{Nd}+>/, Num
         rule %r/<[-+]?[\p{Nd}.]+[-+][\p{Nd}.]+i>/, Num
@@ -738,23 +781,24 @@ module Rouge
         # and heredocs (q:to/END/). Before the keyword and builtin rules,
         # which would otherwise take q for a word. With a parenthesis right
         # after it, q is a routine that is being called: q(1)
-        rule %r/#{quote_start}(qq|q|Q)[a-zA-Z]?(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\4*|#{quote_delimiter.(2)})/ do |m|
+        rule %r/#{quote_start}(qq|q|Q)(ww|[a-zA-Z])?(?!\()(?:(#{adverbs})\p{Space}*|#{before_delimiter})((#{OPEN_BRACKET})\5*|#{quote_delimiter.(3)})/ do |m|
           opening = m[0]
-          adverbs = m[2].to_s
-          # qq strings (and the :qq / :c adverbs) interpolate
-          interpolate = m[1] == 'qq' || adverbs.match?(/:(?:qq|c)\b/)
+          adverbs = m[3].to_s
+          # qq strings interpolate, and so do the others as far as their
+          # adverbs say: q:s/$scalars only/, Qc/{closures} only/
+          interpolations = interpolations_of(m[1], m[2], adverbs)
           # nothing is special in Q, not even a backslash: Q/\/
-          body, closing = scan_delimited(m, m[3], escapes: m[1] != 'Q')
+          body, closing = scan_delimited(m, m[4], escapes: m[1] != 'Q')
 
-          if adverbs.match?(/:to\b/)
+          if adverbs.match?(HEREDOC_ADVERB)
             token Str, opening + body + closing
-            lex_heredocs(m, body, interpolate)
-          elsif interpolate
-            token Str, opening
-            sublex body, :interpolated
-            token Str, closing
+            lex_heredocs(m, body, interpolations)
+          elsif interpolations.empty?
+            token Str, opening + body + closing
           else
-            token Str, opening + body + closing
+            token Str, opening
+            lex_quoted(body, interpolations)
+            token Str, closing
           end
         end
 
@@ -879,7 +923,7 @@ module Rouge
         # and so they are in [«] and [<<], which name an operator.
         rule %r/(?<![#{w}\])}>+\-*\/%~!?^|&.])«(?!\])/, Str::Double, :ww_guillemets
         rule %r/(?<![#{w}\])}>])<<(?![=\]])/, Str::Double, :ww_angles
-        rule %r/(?!<->)<[^\p{Space}=<>{};()](?:[^<>{};()]*[^\p{Space}<>{};()])?>/, Str
+        rule %r/(?!<->)<(?:\\[<>]|[^\p{Space}=<>{};()])(?:(?:\\[<>]|[^<>{};()])*(?:\\[<>]|[^\p{Space}<>{};()]))?>/, Str
 
         # --- labels, pairs and operators
         # loop labels: OUTER: for ...
@@ -1130,7 +1174,9 @@ module Rouge
 
       # what can appear inside an interpolating string
       state :interpolation do
-        rule %r/\\(?:[abefnrt0"'\\$@%&{}<>«»]|[xXoOcCdD]\[[^\]\n]*\]|x[0-9a-fA-F]+)/, Str::Escape
+        rule %r/\\(?:[abefnrt0"'\\$@%&{}<>«»]|[xXoOcCdD]\[[^\]\n]*\]|x[0-9a-fA-F]+)/ do
+          token interpolates?(:b) ? Str::Escape : Str::Double
+        end
         rule %r/\\./m, Str::Double
         # What interpolates is code, and is lexed as code, so that a
         # variable looks the same inside a string as outside of it.
@@ -1142,12 +1188,20 @@ module Rouge
         # Each can be followed by subscripts and by method calls, which
         # need their parentheses here: $x[0]<a>, $x.uc(), @a.sort().join(',')
         rule %r/(?:[$@%&]#{arguments}#{postfix}*|\$(?:[*.!^?=~:]?#{qualified_ident}|[!\/&¢]|\p{Nd}+|<[^>\n]+>)#{postfix}*|[@%][*.!^?=~:]?#{qualified_ident}#{postfix}+|&#{ident}#{arguments}#{postfix}*)/ do |m|
-          sublex m[0]
+          if interpolates?(SIGIL_INTERPOLATIONS[m[0][0]])
+            sublex m[0]
+          else
+            token Str::Double
+          end
         end
         rule %r/\{/ do
-          token Punctuation
-          @brace_levels << 1
-          push :embedded
+          if interpolates?(:c)
+            token Punctuation
+            @brace_levels << 1
+            push :embedded
+          else
+            token Str::Double
+          end
         end
       end
 
